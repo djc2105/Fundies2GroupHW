@@ -1,4 +1,3 @@
-
 import tester.Tester;
 import javalib.funworld.*;
 import javalib.worldimages.*;
@@ -69,7 +68,7 @@ public class Fishy extends World {
       return new MtLoBot();
     }
     
-    return new ConsLoBot(new BotFish(this.rand, SCREEN_HEIGHT), generateFish(n-1));
+    return new ConsLoBot(new BotFish(this.rand), generateFish(n-1));
   }
 
   // draws the Fishy! game
@@ -81,6 +80,10 @@ public class Fishy extends World {
             this.player.x, this.player.y)
         .placeImageXY(this.bots.drawBots(new EmptyImage()
             .movePinhole(SCREEN_WIDTH/-2, SCREEN_HEIGHT/-2)), 0, 0);
+  }
+  
+  public World onTick() {
+    return new Fishy(this.player, this.rand, this.bots.update());
   }
   
 }
@@ -118,8 +121,8 @@ abstract class AFish implements IFish {
               90), 
           new EllipseImage(this.size * SCALE * 2, 
               this.size * SCALE, 
-              OutlineMode.SOLID, this.color))
-          .movePinhole(this.size * SCALE * 1.5, 0);
+              OutlineMode.SOLID, this.color));
+          // .movePinhole(this.size * SCALE * 1.5, 0);
     } else {
       return new BesideImage( 
           new EllipseImage(this.size * SCALE * 2, 
@@ -128,8 +131,8 @@ abstract class AFish implements IFish {
           new RotateImage(
               new EquilateralTriangleImage(this.size * SCALE, 
                   OutlineMode.SOLID, this.color), 
-              270))
-          .movePinhole(-this.size * SCALE * 1.5, 0);
+              270));
+          // .movePinhole(-this.size * SCALE * 1.5, 0);
     }
   }
   
@@ -295,24 +298,65 @@ class PlayerFish extends AFish {
 
 // the non-playable fish in the Fishy! game
 class BotFish extends AFish {
+  Random rand;
   
   // constructor
-  public BotFish(Random rand, int height) {
-    int randHeight = rand.nextInt(height - 20) + 10; // Gets a y height that is between 10-(height-10)
+  public BotFish(Random rand) {
+    int randHeight = rand.nextInt(SCREEN_HEIGHT - 20) + 10; // Gets a y height that is between 10-(height-10)
     int rand0o1 = rand.nextInt(2);
+    this.rand = rand;
     super.size = rand.nextInt(10) + 1; // Generates a size between 1-10
-    super.color = Color.black;
+    super.color = this.randomColor();
 
     if (rand0o1 == 0) {
-      movingRight = true;
+      super.movingRight = true;
       super.x = 0;
       super.y = randHeight;
     }
     else {
-      movingRight = false;
+      super.movingRight = false;
       super.x = SCREEN_WIDTH;
       super.y = randHeight;
     }
+  }
+  
+  public BotFish(Random rand, int x, int y, boolean movingRight, int size, Color c) {
+    this.rand = rand;
+    super.x = x;
+    super.y = y;
+    super.movingRight = movingRight;
+    super.size = size;
+    super.color = c;
+  }
+
+  public BotFish update() {
+    int speed;
+    
+    if (super.x < -300 || super.x > 1100) {
+      return new BotFish(this.rand);
+    }
+    
+    speed = 6 - ((this.size + 1) / 2);
+
+    int newX;
+    
+    if (movingRight) {
+      newX = this.x + speed;
+    } else {
+      newX = this.x - speed;
+    }
+    
+    return new BotFish(this.rand, newX, this.y, this.movingRight, this.size, this.color);
+  }
+  
+  public Color randomColor() {
+    int rand = this.rand.nextInt(5);
+    if(rand == 0) { return Color.green; }
+    if(rand == 1) { return Color.yellow; }
+    if(rand == 2) { return Color.orange; }
+    if(rand == 3) { return Color.gray; }
+    if(rand == 4) { return Color.pink; }
+    return Color.black;
   }
 }
 
@@ -320,6 +364,8 @@ class BotFish extends AFish {
 interface ILoBot {
   // Return a world image containing all the botFish
   WorldImage drawBots(WorldImage img);
+
+  ILoBot update();
   
 }
 
@@ -341,6 +387,11 @@ class ConsLoBot implements ILoBot {
     return rest.drawBots(((img.movePinhole(this.first.x, this.first.y)).overlayImages(
         this.first.drawFish())).movePinhole(this.first.x * -1, this.first.y * -1));
   }
+
+  // Updates first fishes position
+  public ILoBot update() {
+    return new ConsLoBot(this.first.update(), this.rest.update());
+  }
   
 }
 
@@ -350,6 +401,11 @@ class MtLoBot implements ILoBot {
   // Returns the completed image
   public WorldImage drawBots(WorldImage img) {
     return img;
+  }
+
+  // Returns an MtLoBot to finish the list
+  public ILoBot update() {
+    return new MtLoBot();
   }
 }
 
@@ -361,7 +417,6 @@ class ExamplesFishy {
   
   // a class to test Fishy
   boolean testFishy(Tester t) {
-    return w.bigBang(800, 600, 1);
+    return w.bigBang(800, 600, .001);
   }
-  
 }
