@@ -5,6 +5,10 @@ import javalib.worldimages.*;
 import java.awt.Color;
 import java.util.Random;
 
+import javax.annotation.processing.Generated;
+
+import com.sun.source.util.TreePathScanner;
+
 /*
  * Sizes range from 1 to 10 for bots
  *    Eat 3 fish to grow
@@ -24,17 +28,26 @@ public class Fishy extends World {
   // variables 
   PlayerFish player;
   Random rand;
+  ILoBot bots;
 
   // Constructor for playing
   public Fishy(PlayerFish player) {
     this.player = player;
     this.rand = new Random();
+    this.bots = this.generateFish(10);
   }
 
+  //Constructor for use in testing
+ public Fishy(PlayerFish player, Random rand) {
+   this.player = player;
+   this.rand = rand;
+ }
+  
   // Constructor for use in testing
-  public Fishy(PlayerFish player, Random rand) {
+  public Fishy(PlayerFish player, Random rand, ILoBot bots) {
     this.player = player;
     this.rand = rand;
+    this.bots = bots;
   }
   
   /* fields: 
@@ -51,7 +64,16 @@ public class Fishy extends World {
   
   //moves the player when a key is pressed
   public World onKeyEvent(String ke) {
-    return new Fishy(player.moveFish(ke));
+    return new Fishy(player.moveFish(ke), this.rand, this.bots);
+  }
+  
+  // Generates a ILoFIsh of Botfish of length n
+  public ILoBot generateFish(int n) {
+    if (n == 0) {
+      return new MtLoBot();
+    }
+    
+    return new ConsLoBot(new BotFish(this.rand, SCREEN_HEIGHT), generateFish(n-1));
   }
 
   // draws the Fishy! game
@@ -60,7 +82,9 @@ public class Fishy extends World {
         .getEmptyScene()
         .placeImageXY(this.BACKGROUND, 400, 300)
         .placeImageXY(this.player.drawFish(), 
-            this.player.x, this.player.y);
+            this.player.x, this.player.y)
+        .placeImageXY(this.bots.drawBots(new EmptyImage()
+            .movePinhole(SCREEN_WIDTH/-2, SCREEN_HEIGHT/-2)), 0, 0);
   }
   
 }
@@ -98,7 +122,8 @@ abstract class AFish implements IFish {
               90), 
           new EllipseImage(this.size * SCALE * 2, 
               this.size * SCALE, 
-              OutlineMode.SOLID, this.color));
+              OutlineMode.SOLID, this.color))
+          .movePinhole(this.size * SCALE * 1.5, 0);
     } else {
       return new BesideImage( 
           new EllipseImage(this.size * SCALE * 2, 
@@ -107,7 +132,8 @@ abstract class AFish implements IFish {
           new RotateImage(
               new EquilateralTriangleImage(this.size * SCALE, 
                   OutlineMode.SOLID, this.color), 
-              270));
+              270))
+          .movePinhole(-this.size * SCALE * 1.5, 0);
     }
   }
   
@@ -199,24 +225,30 @@ class BotFish extends AFish {
   
   // constructor
   public BotFish(Random rand, int height) {
-    int randInt = rand.nextInt(height - 20) + 10; // Gets a y height that is between 10-(height-10)
+    int randHeight = rand.nextInt(height - 20) + 10; // Gets a y height that is between 10-(height-10)
+    int rand0o1 = rand.nextInt(2);
     super.size = rand.nextInt(10) + 1; // Generates a size between 1-10
+    super.color = Color.black;
 
-    if (randInt < ((height-10)/2)) {
+    if (rand0o1 == 0) {
       movingRight = true;
       super.x = 0;
-      super.y = randInt;
+      super.y = randHeight;
     }
     else {
       movingRight = false;
-      super.x = 800;
-      super.y = randInt;
+      super.x = SCREEN_WIDTH;
+      super.y = randHeight;
     }
   }
 }
 
 // an interface to represent a list of BotFish
-interface ILoBot {}
+interface ILoBot {
+  // Return a world image containing all the botFish
+  WorldImage drawBots(WorldImage img);
+  
+}
 
 // a non-empty list of BotFish
 class ConsLoBot implements ILoBot {
@@ -230,20 +262,32 @@ class ConsLoBot implements ILoBot {
     this.first = first;
     this.rest = rest;
   }
+
+  // Adds first fish to the image and then recurs
+  public WorldImage drawBots(WorldImage img) {
+    return rest.drawBots(((img.movePinhole(this.first.x, this.first.y)).overlayImages(
+        this.first.drawFish())).movePinhole(this.first.x * -1, this.first.y * -1));
+  }
   
 }
 
 // an empty list of BotFish
-class MtLoBot implements ILoBot {}
+class MtLoBot implements ILoBot {
+
+  // Returns the completed image
+  public WorldImage drawBots(WorldImage img) {
+    return img;
+  }
+}
 
 class ExamplesFishy {
   
   // example variables
   PlayerFish player1 = new PlayerFish(400, 300, 1, 0, Color.RED, true);
+  Fishy w = new Fishy(this.player1);
   
   // a class to test Fishy
   boolean testFishy(Tester t) {
-    Fishy w = new Fishy(this.player1);
     return w.bigBang(800, 600, 1);
   }
   
