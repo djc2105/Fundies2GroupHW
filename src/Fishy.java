@@ -5,10 +5,6 @@ import javalib.worldimages.*;
 import java.awt.Color;
 import java.util.Random;
 
-import javax.annotation.processing.Generated;
-
-import com.sun.source.util.TreePathScanner;
-
 /*
  * Sizes range from 1 to 10 for bots
  *    Eat 3 fish to grow
@@ -137,10 +133,58 @@ abstract class AFish implements IFish {
     }
   }
   
-  // returns the distance from the pinhole
-  // to the border of the fish's hitbox
-  int giveBoundary() {
-    return 0;
+  // checks if this fish's hitbox falls 
+  // within another fish's hitbox in the x axis
+  boolean checkCollideX(AFish other) {
+    return other.withinHitboxX(this.getLeftBox())
+        || other.withinHitboxX(this.getRightBox());
+  }
+  
+  // checks if this fish's hitbox falls 
+  // within another fish's hitbox in the y axis
+  boolean checkCollideY(AFish other) {
+    return other.withinHitboxY(this.getTopBox())
+        || other.withinHitboxY(this.getBottomBox());
+  }
+  
+  // returns true if the given x value is within the range of the fish's hitbox
+  boolean withinHitboxX(int xVal) {
+    return (xVal >= this.getLeftBox())
+        && (xVal <= this.getRightBox());
+  }
+  
+  // returns true if the given y value is within the range of the fish's hitbox
+  boolean withinHitboxY(int yVal) {
+    return (yVal >= this.getTopBox())
+        && (yVal <= this.getBottomBox());
+  }
+  
+  // gives the x value of the left side of the hitbox
+  int getLeftBox() {
+    if (this.movingRight) {
+      return (this.x - (this.size * SCALE * 3));
+    } else {
+      return x;
+    }
+  }
+  
+  // gives the x value of the right side of the hitbox
+  int getRightBox() {
+    if (this.movingRight) {
+      return this.x;
+    } else {
+      return (this.x + (this.size * SCALE * 3));
+    }
+  }
+  
+  // gives the y value of the top of the hitbox
+  int getTopBox() {
+    return this.y - (this.size * SCALE);
+  }
+  
+  // gives the y value of the bottom of the hitbox
+  int getBottomBox() {
+    return this.y + (this.size * SCALE);
   }
 
 }
@@ -152,7 +196,18 @@ class PlayerFish extends AFish {
   // variables
   int fishUntilGrow;
 
-  // constructor
+  // convenience constructor
+  public PlayerFish() {
+    super.x = SCREEN_WIDTH / 2;
+    super.y = SCREEN_HEIGHT / 2;
+    super.size = 1;
+    this.fishUntilGrow = 0;
+    super.color = Color.RED;
+    super.movingRight = true;
+    
+  }
+  
+  // constructor for code use
   public PlayerFish(int x, int y, int size, int fishUntilGrow, 
       Color color, boolean movingRight) {
     super.x = x;
@@ -208,9 +263,27 @@ class PlayerFish extends AFish {
     }
   }
   
+  // if a collision happens, have the fish eat if it can
+  public PlayerFish collision(BotFish other) {
+    if (this.willCollide(other) && this.canEat(other)) {
+      this.fishUntilGrow ++;
+      if (this.fishUntilGrow == 3) {
+        super.size ++;
+        this.fishUntilGrow = 0;
+      }
+      return new PlayerFish(super.x, super.y, super.size, 
+          this.fishUntilGrow, super.color, super.movingRight);
+    }
+    return this;
+    
+  }
+  
   // checks if a collision will occur
   boolean willCollide(BotFish other) {
-    return true;
+    return this.checkCollideX(other)
+        || this.checkCollideY(other)
+        || other.checkCollideX(this)
+        || other.checkCollideY(this);
   }
   
   // determines if the playable fish can eat a BotFish
@@ -283,7 +356,7 @@ class MtLoBot implements ILoBot {
 class ExamplesFishy {
   
   // example variables
-  PlayerFish player1 = new PlayerFish(400, 300, 1, 0, Color.RED, true);
+  PlayerFish player1 = new PlayerFish();
   Fishy w = new Fishy(this.player1);
   
   // a class to test Fishy
