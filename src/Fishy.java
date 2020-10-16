@@ -13,13 +13,13 @@ import java.util.Random;
 
 // contains the Fishy! game
 public class Fishy extends World {
-  
+
   // constants
   int SCREEN_WIDTH = 800;
   int SCREEN_HEIGHT = 600;
   WorldImage BACKGROUND = 
       new RectangleImage(SCREEN_WIDTH, SCREEN_HEIGHT, OutlineMode.SOLID, Color.blue);
-  
+
   // variables 
   PlayerFish player;
   Random rand;
@@ -33,18 +33,18 @@ public class Fishy extends World {
   }
 
   //Constructor for use in testing
- public Fishy(PlayerFish player, Random rand) {
-   this.player = player;
-   this.rand = rand;
- }
-  
+  public Fishy(PlayerFish player, Random rand) {
+    this.player = player;
+    this.rand = rand;
+  }
+
   // Constructor for use in testing
   public Fishy(PlayerFish player, Random rand, ILoBot bots) {
     this.player = player;
     this.rand = rand;
     this.bots = bots;
   }
-  
+
   /* fields: 
    *   this.player ... PlayerFish
    *   this.rand ... Random
@@ -56,18 +56,18 @@ public class Fishy extends World {
    *   this.player.moveFish(String) ... PlayerFish
    *   this.player.canEat(BotFish) ... Boolean
    */
-  
+
   //moves the player when a key is pressed
   public World onKeyEvent(String ke) {
     return new Fishy(player.moveFish(ke), this.rand, this.bots);
   }
-  
+
   // Generates a ILoFIsh of Botfish of length n
   public ILoBot generateFish(int n) {
     if (n == 0) {
       return new MtLoBot();
     }
-    
+
     return new ConsLoBot(new BotFish(this.rand), generateFish(n-1));
   }
 
@@ -81,16 +81,18 @@ public class Fishy extends World {
         .placeImageXY(this.bots.drawBots(new EmptyImage()
             .movePinhole(SCREEN_WIDTH/-2, SCREEN_HEIGHT/-2)), 0, 0);
   }
-  
+
   public World onTick() {
-    return new Fishy(this.player, this.rand, this.bots.update());
+    return new Fishy(this.bots.checkCollisions(this.player), this.rand, this.bots.checkDead(this.player).update());
   }
   
+
+
 }
 
 // an interface to represent a fish in the Fishy! game
 interface IFish {
-  
+
   // constants
   int SCALE = 10;
   int SCREEN_WIDTH = 800;
@@ -98,12 +100,12 @@ interface IFish {
 
   // draws the IFish
   WorldImage drawFish();
-  
+
 }
 
 // an abstract class to represent a Fish in the Fishy! game
 abstract class AFish implements IFish {
-  
+
   // variables
   int x;
   int y;
@@ -121,8 +123,8 @@ abstract class AFish implements IFish {
               90), 
           new EllipseImage(this.size * SCALE * 2, 
               this.size * SCALE, 
-              OutlineMode.SOLID, this.color));
-          // .movePinhole(this.size * SCALE * 1.5, 0);
+              OutlineMode.SOLID, this.color))
+          .movePinhole(this.size * SCALE * 1.5, 0);
     } else {
       return new BesideImage( 
           new EllipseImage(this.size * SCALE * 2, 
@@ -131,37 +133,50 @@ abstract class AFish implements IFish {
           new RotateImage(
               new EquilateralTriangleImage(this.size * SCALE, 
                   OutlineMode.SOLID, this.color), 
-              270));
-          // .movePinhole(-this.size * SCALE * 1.5, 0);
+              270))
+          .movePinhole(-this.size * SCALE * 1.5, 0);
     }
   }
-  
+
+  // checks if a collision will occur
+  boolean willCollide(AFish other) {
+    return (this.checkCollideX(other)
+        || other.checkCollideX(this))
+        && (this.checkCollideY(other)
+        || other.checkCollideY(this));
+  }
+
+  // determines if the playable fish can eat a BotFish
+  boolean canEat(AFish other) {
+    return (this.size >= other.size);
+  }
+
   // checks if this fish's hitbox falls 
   // within another fish's hitbox in the x axis
   boolean checkCollideX(AFish other) {
     return other.withinHitboxX(this.getLeftBox())
         || other.withinHitboxX(this.getRightBox());
   }
-  
+
   // checks if this fish's hitbox falls 
   // within another fish's hitbox in the y axis
   boolean checkCollideY(AFish other) {
     return other.withinHitboxY(this.getTopBox())
         || other.withinHitboxY(this.getBottomBox());
   }
-  
+
   // returns true if the given x value is within the range of the fish's hitbox
   boolean withinHitboxX(int xVal) {
     return (xVal >= this.getLeftBox())
         && (xVal <= this.getRightBox());
   }
-  
+
   // returns true if the given y value is within the range of the fish's hitbox
   boolean withinHitboxY(int yVal) {
     return (yVal >= this.getTopBox())
         && (yVal <= this.getBottomBox());
   }
-  
+
   // gives the x value of the left side of the hitbox
   int getLeftBox() {
     if (this.movingRight) {
@@ -170,7 +185,7 @@ abstract class AFish implements IFish {
       return x;
     }
   }
-  
+
   // gives the x value of the right side of the hitbox
   int getRightBox() {
     if (this.movingRight) {
@@ -179,12 +194,12 @@ abstract class AFish implements IFish {
       return (this.x + (this.size * SCALE * 3));
     }
   }
-  
+
   // gives the y value of the top of the hitbox
   int getTopBox() {
     return this.y - (this.size * SCALE);
   }
-  
+
   // gives the y value of the bottom of the hitbox
   int getBottomBox() {
     return this.y + (this.size * SCALE);
@@ -195,7 +210,7 @@ abstract class AFish implements IFish {
 
 // the fish controlled by the player in the Fishy! game
 class PlayerFish extends AFish {
-  
+
   // variables
   int fishUntilGrow;
 
@@ -207,9 +222,9 @@ class PlayerFish extends AFish {
     this.fishUntilGrow = 0;
     super.color = Color.RED;
     super.movingRight = true;
-    
+
   }
-  
+
   // constructor for code use
   public PlayerFish(int x, int y, int size, int fishUntilGrow, 
       Color color, boolean movingRight) {
@@ -278,20 +293,6 @@ class PlayerFish extends AFish {
           this.fishUntilGrow, super.color, super.movingRight);
     }
     return this;
-    
-  }
-  
-  // checks if a collision will occur
-  boolean willCollide(BotFish other) {
-    return this.checkCollideX(other)
-        || this.checkCollideY(other)
-        || other.checkCollideX(this)
-        || other.checkCollideY(this);
-  }
-  
-  // determines if the playable fish can eat a BotFish
-  boolean canEat(BotFish other) {
-    return (super.size >= other.size);
   }
 
 }
@@ -299,7 +300,7 @@ class PlayerFish extends AFish {
 // the non-playable fish in the Fishy! game
 class BotFish extends AFish {
   Random rand;
-  
+
   // constructor
   public BotFish(Random rand) {
     int randHeight = rand.nextInt(SCREEN_HEIGHT - 20) + 10; // Gets a y height that is between 10-(height-10)
@@ -319,7 +320,7 @@ class BotFish extends AFish {
       super.y = randHeight;
     }
   }
-  
+
   public BotFish(Random rand, int x, int y, boolean movingRight, int size, Color c) {
     this.rand = rand;
     super.x = x;
@@ -331,24 +332,24 @@ class BotFish extends AFish {
 
   public BotFish update() {
     int speed;
-    
+
     if (super.x < -300 || super.x > 1100) {
       return new BotFish(this.rand);
     }
-    
+
     speed = 6 - ((this.size + 1) / 2);
 
     int newX;
-    
+
     if (movingRight) {
       newX = this.x + speed;
     } else {
       newX = this.x - speed;
     }
-    
+
     return new BotFish(this.rand, newX, this.y, this.movingRight, this.size, this.color);
   }
-  
+
   public Color randomColor() {
     int rand = this.rand.nextInt(5);
     if(rand == 0) { return Color.green; }
@@ -367,11 +368,15 @@ interface ILoBot {
 
   ILoBot update();
   
+  PlayerFish checkCollisions(PlayerFish p);
+  
+  ILoBot checkDead(PlayerFish p);
+
 }
 
 // a non-empty list of BotFish
 class ConsLoBot implements ILoBot {
-  
+
   // variables
   BotFish first;
   ILoBot rest;
@@ -393,6 +398,20 @@ class ConsLoBot implements ILoBot {
     return new ConsLoBot(this.first.update(), this.rest.update());
   }
   
+  public PlayerFish checkCollisions(PlayerFish p) {
+    return this.rest.checkCollisions(p.collision(this.first));
+  }
+  
+  public ILoBot checkDead(PlayerFish p) {
+    if (p.willCollide(this.first) && p.canEat(this.first)) {
+      System.out.println("fuck");
+      return new ConsLoBot(new BotFish(new Random()), 
+          this.rest.checkDead(p));
+    } else {
+      return new ConsLoBot(this.first, this.rest.checkDead(p));
+    }
+  }
+
 }
 
 // an empty list of BotFish
@@ -407,16 +426,25 @@ class MtLoBot implements ILoBot {
   public ILoBot update() {
     return new MtLoBot();
   }
+  
+  public PlayerFish checkCollisions(PlayerFish p) {
+    return p;
+  }
+  
+  public ILoBot checkDead(PlayerFish p) {
+    return this;
+  }
+  
 }
 
 class ExamplesFishy {
-  
+
   // example variables
   PlayerFish player1 = new PlayerFish();
   Fishy w = new Fishy(this.player1);
-  
+
   // a class to test Fishy
   boolean testFishy(Tester t) {
-    return w.bigBang(800, 600, .001);
+    return w.bigBang(800, 600, .05);
   }
 }
