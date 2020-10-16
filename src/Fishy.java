@@ -1,6 +1,8 @@
 import tester.Tester;
 import javalib.funworld.*;
 import javalib.worldimages.*;
+import sun.tools.tree.ThisExpression;
+
 import java.awt.Color;
 import java.util.Random;
 
@@ -29,7 +31,7 @@ class Fishy extends World {
   Fishy(PlayerFish player) {
     this.player = player;
     this.rand = new Random();
-    this.bots = this.generateFish(10);
+    this.bots = this.generateFish(10, this.rand);
   }
 
   //Constructor for use in testing
@@ -63,12 +65,12 @@ class Fishy extends World {
   }
 
   // Generates a ILoFIsh of Botfish of length n
-  ILoBot generateFish(int n) { //-----------------------------------------------------------------------------------------------------------
+  ILoBot generateFish(int n, Random rand) { //-----------------------------------------------------------------------------------------------------------
     if (n == 0) {
       return new MtLoBot();
     }
 
-    return new ConsLoBot(new BotFish(this.rand), generateFish(n - 1));
+    return new ConsLoBot(new BotFish(rand), generateFish(n - 1, rand));
   }
 
   // draws the Fishy! game
@@ -332,7 +334,7 @@ class BotFish extends AFish {
     int rand0o1 = rand.nextInt(2);
     this.rand = rand;
     super.size = rand.nextInt(10) + 1; // Generates a size between 1-10
-    super.color = this.randomColor();
+    super.color = this.randomColor(this.rand);
 
     if (rand0o1 == 0) {
       super.movingRight = true;
@@ -355,7 +357,7 @@ class BotFish extends AFish {
     super.color = c;
   }
 
-  public BotFish update() { //-----------------------------------------------------------------------------------------------------------
+  public BotFish update() { 
     int speed;
 
     if (super.x < -300 || super.x > 1100) {
@@ -375,17 +377,17 @@ class BotFish extends AFish {
     return new BotFish(this.rand, newX, this.y, this.movingRight, this.size, this.color);
   }
 
-  public Color randomColor() { //-----------------------------------------------------------------------------------------------------------
-    int rand = this.rand.nextInt(5);
-    if (rand == 0) { 
+  public Color randomColor(Random rand) {
+    int randInt = rand.nextInt(5);
+    if (randInt == 0) { 
       return Color.green; 
-    } else if (rand == 1) { 
+    } else if (randInt == 1) { 
       return Color.yellow; 
-    } else if (rand == 2) { 
+    } else if (randInt == 2) { 
       return Color.orange; 
-    } else if (rand == 3) { 
+    } else if (randInt == 3) { 
       return Color.gray; 
-    } else if (rand == 4) { 
+    } else if (randInt == 4) { 
       return Color.pink; 
     }
     return Color.black;
@@ -417,7 +419,7 @@ class ConsLoBot implements ILoBot {
   ILoBot rest;
 
   // constructor
-  public ConsLoBot(BotFish first, ILoBot rest) { //-----------------------------------------------------------------------------------------------------------
+  public ConsLoBot(BotFish first, ILoBot rest) {
     this.first = first;
     this.rest = rest;
   }
@@ -429,7 +431,7 @@ class ConsLoBot implements ILoBot {
   }
 
   // Updates first fishes position
-  public ILoBot update() { //-----------------------------------------------------------------------------------------------------------
+  public ILoBot update() { 
     return new ConsLoBot(this.first.update(), this.rest.update());
   }
   
@@ -457,7 +459,7 @@ class MtLoBot implements ILoBot {
   }
 
   // Returns an MtLoBot to finish the list
-  public ILoBot update() { //-----------------------------------------------------------------------------------------------------------
+  public ILoBot update() { 
     return new MtLoBot();
   }
   
@@ -480,8 +482,10 @@ class ExamplesFishy {
   Fishy w = new Fishy(this.player1);
   Fishy testW = new Fishy(this.player1, rand);
   ILoBot testEmptyBot = new MtLoBot();
-  BotFish botFish = new BotFish(rand);
+  BotFish botFish = new BotFish(this.rand, 0, 100, true, 5, Color.yellow);
+  BotFish botFishR = new BotFish(this.rand, 0, 100, true, 5, Color.yellow);
   ILoBot testBot = new ConsLoBot(botFish, testEmptyBot);
+  BotFish botFishL = new BotFish(rand, 800, 100, false, 1, Color.black);
 
   // a class to test Fishy
   boolean testFishy(Tester t) {
@@ -506,12 +510,38 @@ class ExamplesFishy {
   boolean testCollision(Tester t) {
     return t.checkExpect(this.player1.collision(this.botFish), this.player1);
   }
+
+  //method to test the update method for the ILoBot
+  boolean testUpdateILoBot(Tester t) {
+   return t.checkExpect(testEmptyBot.update(), testEmptyBot)
+       && t.checkExpect(testBot.update(), new ConsLoBot(botFishR.update(), testEmptyBot));
+  }
+  
+  //method to test the update method for the BotFish
+  boolean testUpdateBotFish(Tester t) {
+   return t.checkExpect(botFishR.update(), new BotFish(rand, 3, 100, true, 5, Color.yellow))
+       && t.checkExpect(botFishL.update(), new BotFish(rand, 795, 100, false, 1, Color.black));
+  }
+  
+  //tests the random color method
+  boolean testRandomColor(Tester t) {
+   return t.checkExpect(botFishL.randomColor(new Random(1)), Color.green)
+       && t.checkExpect(botFishR.randomColor(new Random(2)), Color.gray);
+  }
+  
+  //test is Big Enough method 
+  boolean testIsBigEnough(Tester t) {
+   return t.checkExpect(player1.isBigEnough(), false)
+       && t.checkExpect(player2.isBigEnough(), true);
+  }
   
   // method to testGenerateBots
-  //boolean testGenerateBots(Tester t) {
-  //  return t.checkExpect(testW.generateFish(0), new MtLoBot())
-  //      && t.checkExpect(testW.generateFish(1), new ConsLoBot(new BotFish(rand), new MtLoBot()));
-  //}
+  boolean testGenerateBots(Tester t) {
+    return t.checkExpect(testW.generateFish(0, new Random(5)), new MtLoBot())
+        && t.checkExpect(testW.generateFish(1, new Random(5)), 
+            new ConsLoBot(new BotFish(new Random(5)), new MtLoBot()));
+  }
+
   
   
 }
