@@ -1,6 +1,8 @@
 import tester.Tester;
 import javalib.funworld.*;
 import javalib.worldimages.*;
+import sun.tools.tree.ThisExpression;
+
 import java.awt.Color;
 import java.util.Random;
 
@@ -12,13 +14,13 @@ import java.util.Random;
  */
 
 // contains the Fishy! game
-public class Fishy extends World {
+class Fishy extends World {
 
   // constants
-  int SCREEN_WIDTH = 800;
-  int SCREEN_HEIGHT = 600;
-  WorldImage BACKGROUND = 
-      new RectangleImage(SCREEN_WIDTH, SCREEN_HEIGHT, OutlineMode.SOLID, Color.blue);
+  int screenWidth = 800;
+  int screenHeight = 600;
+  WorldImage background = 
+      new RectangleImage(screenWidth, screenHeight, OutlineMode.SOLID, Color.blue);
 
   // variables 
   PlayerFish player;
@@ -26,20 +28,20 @@ public class Fishy extends World {
   ILoBot bots;
 
   // Constructor for playing
-  public Fishy(PlayerFish player) {
+  Fishy(PlayerFish player) {
     this.player = player;
     this.rand = new Random();
     this.bots = this.generateFish(10);
   }
 
   //Constructor for use in testing
-  public Fishy(PlayerFish player, Random rand) {
+  Fishy(PlayerFish player, Random rand) {
     this.player = player;
     this.rand = rand;
   }
 
   // Constructor for use in testing
-  public Fishy(PlayerFish player, Random rand, ILoBot bots) {
+  Fishy(PlayerFish player, Random rand, ILoBot bots) {
     this.player = player;
     this.rand = rand;
     this.bots = bots;
@@ -63,7 +65,7 @@ public class Fishy extends World {
   }
 
   // Generates a ILoFIsh of Botfish of length n
-  public ILoBot generateFish(int n) {
+  ILoBot generateFish(int n) {
     if (n == 0) {
       return new MtLoBot();
     }
@@ -75,15 +77,16 @@ public class Fishy extends World {
   public WorldScene makeScene() {
     return this
         .getEmptyScene()
-        .placeImageXY(this.BACKGROUND, 400, 300)
+        .placeImageXY(this.background, 400, 300)
         .placeImageXY(this.player.drawFish(), 
             this.player.x, this.player.y)
         .placeImageXY(this.bots.drawBots(new EmptyImage()
-            .movePinhole(SCREEN_WIDTH/-2, SCREEN_HEIGHT/-2)), 0, 0);
+            .movePinhole(screenWidth / -2, screenHeight / -2)), 0, 0);
   }
 
   public World onTick() {
-    return new Fishy(this.bots.checkCollisions(this.player), this.rand, this.bots.checkDead(this.player).update());
+    return new Fishy(this.bots.checkCollisions(this.player), 
+        this.rand, this.bots.checkDead(this.player).update());
   }
   
   public WorldEnd worldEnds() {
@@ -96,10 +99,10 @@ public class Fishy extends World {
   }
   
   //produce the last image of this world by adding text to the image 
-    public WorldScene lastScene(String s) {
-      return this.makeScene().placeImageXY(new TextImage(s, Color.red), 100,
-          40);
-    }
+  public WorldScene lastScene(String s) {
+    return this.makeScene().placeImageXY(new TextImage(s, Color.red), 100,
+        40);
+  }
 
 }
 
@@ -327,7 +330,7 @@ class BotFish extends AFish {
 
   // constructor
   public BotFish(Random rand) {
-    int randHeight = rand.nextInt(SCREEN_HEIGHT - 20) + 10; // Gets a y height that is between 10-(height-10)
+    int randHeight = rand.nextInt(SCREEN_HEIGHT - 20) + 10;
     int rand0o1 = rand.nextInt(2);
     this.rand = rand;
     super.size = rand.nextInt(10) + 1; // Generates a size between 1-10
@@ -376,11 +379,21 @@ class BotFish extends AFish {
 
   public Color randomColor() {
     int rand = this.rand.nextInt(5);
-    if(rand == 0) { return Color.green; }
-    if(rand == 1) { return Color.yellow; }
-    if(rand == 2) { return Color.orange; }
-    if(rand == 3) { return Color.gray; }
-    if(rand == 4) { return Color.pink; }
+    if(rand == 0) { 
+      return Color.green; 
+    }
+    if(rand == 1) { 
+      return Color.yellow; 
+    }
+    if(rand == 2) { 
+      return Color.orange; 
+    }
+    if(rand == 3) { 
+      return Color.gray; 
+    }
+    if(rand == 4) { 
+      return Color.pink; 
+    }
     return Color.black;
   }
 }
@@ -464,10 +477,20 @@ class ExamplesFishy {
 
   // example variables
   PlayerFish player1 = new PlayerFish();
+  Random rand = new Random(5);
   Fishy w = new Fishy(this.player1);
+  Fishy testW = new Fishy(this.player1, rand);
 
   // a class to test Fishy
   boolean testFishy(Tester t) {
     return w.bigBang(800, 600, .05);
   }
+  
+  // method to testGenerateBots
+  //boolean testGenerateBots(Tester t) {
+  //  return t.checkExpect(testW.generateFish(0), new MtLoBot())
+  //      && t.checkExpect(testW.generateFish(1), new ConsLoBot(new BotFish(rand), new MtLoBot()));
+  //}
+  
+  
 }
