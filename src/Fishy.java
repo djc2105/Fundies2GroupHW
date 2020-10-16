@@ -86,7 +86,20 @@ public class Fishy extends World {
     return new Fishy(this.bots.checkCollisions(this.player), this.rand, this.bots.checkDead(this.player).update());
   }
   
-
+  public WorldEnd worldEnds() {
+    if (this.player.isEaten()) {
+      return new WorldEnd(true, this.lastScene("you got eaten"));
+    } else if (this.player.isBigEnough()) {
+      return new WorldEnd(true, this.lastScene("you win"));
+    }
+    return new WorldEnd(false, this.makeScene());
+  }
+  
+  //produce the last image of this world by adding text to the image 
+    public WorldScene lastScene(String s) {
+      return this.makeScene().placeImageXY(new TextImage(s, Color.red), 100,
+          40);
+    }
 
 }
 
@@ -291,8 +304,19 @@ class PlayerFish extends AFish {
       }
       return new PlayerFish(super.x, super.y, super.size, 
           this.fishUntilGrow, super.color, super.movingRight);
-    }
+    } else if (this.willCollide(other) && !this.canEat(other)) {
+      return new PlayerFish(super.x, super.y, super.size, 
+          -10, super.color, super.movingRight);
+    } 
     return this;
+  }
+  
+  public boolean isEaten() {
+    return this.fishUntilGrow < 0;
+  }
+  
+  public boolean isBigEnough() {
+    return this.size > 10;
   }
 
 }
@@ -404,7 +428,6 @@ class ConsLoBot implements ILoBot {
   
   public ILoBot checkDead(PlayerFish p) {
     if (p.willCollide(this.first) && p.canEat(this.first)) {
-      System.out.println("fuck");
       return new ConsLoBot(new BotFish(new Random()), 
           this.rest.checkDead(p));
     } else {
