@@ -1,6 +1,9 @@
 import tester.Tester;
 import javalib.funworld.*;
 import javalib.worldimages.*;
+import sun.reflect.generics.tree.BottomSignature;
+import sun.tools.tree.ThisExpression;
+
 import java.awt.Color;
 import java.util.Random;
 
@@ -58,12 +61,12 @@ class Fishy extends World {
    */
 
   //moves the player when a key is pressed
-  public World onKeyEvent(String ke) { //-----------------------------------------------------------------------------------------------------------
+  public World onKeyEvent(String ke) { 
     return new Fishy(player.moveFish(ke), this.rand, this.bots);
   }
 
   // Generates a ILoFIsh of Botfish of length n
-  ILoBot generateFish(int n, Random rand) { //-----------------------------------------------------------------------------------------------------------
+  ILoBot generateFish(int n, Random rand) { 
     if (n == 0) {
       return new MtLoBot();
     }
@@ -82,12 +85,12 @@ class Fishy extends World {
             .movePinhole(screenWidth / -2, screenHeight / -2)), 0, 0);
   }
 
-  public World onTick() { //-----------------------------------------------------------------------------------------------------------
+  public World onTick() { 
     return new Fishy(this.bots.checkCollisions(this.player), 
         this.rand, this.bots.checkDead(this.player, rand).update());
   }
   
-  public WorldEnd worldEnds() { //-----------------------------------------------------------------------------------------------------------
+  public WorldEnd worldEnds() { 
     if (this.player.isEaten()) {
       return new WorldEnd(true, this.lastScene("you got eaten"));
     } else if (this.player.isBigEnough()) {
@@ -97,7 +100,7 @@ class Fishy extends World {
   }
   
   //produce the last image of this world by adding text to the image 
-  public WorldScene lastScene(String s) { //-----------------------------------------------------------------------------------------------------------
+  public WorldScene lastScene(String s) { 
     return this.makeScene().placeImageXY(new TextImage(s, Color.red), 100,
         40);
   }
@@ -128,7 +131,7 @@ abstract class AFish implements IFish {
   boolean movingRight;
 
   // draws the AFish
-  public WorldImage drawFish() { //-----------------------------------------------------------------------------------------------------------
+  public WorldImage drawFish() { 
     if (movingRight) {
       return new BesideImage(
           new RotateImage(
@@ -153,7 +156,7 @@ abstract class AFish implements IFish {
   }
 
   // checks if a collision will occur
-  boolean willCollide(AFish other) { //-----------------------------------------------------------------------------------------------------------
+  boolean willCollide(AFish other) { 
     return (this.checkCollideX(other)
         || other.checkCollideX(this))
         && (this.checkCollideY(other)
@@ -167,32 +170,32 @@ abstract class AFish implements IFish {
 
   // checks if this fish's hitbox falls 
   // within another fish's hitbox in the x axis
-  boolean checkCollideX(AFish other) { //-----------------------------------------------------------------------------------------------------------
+  boolean checkCollideX(AFish other) { 
     return other.withinHitboxX(this.getLeftBox())
         || other.withinHitboxX(this.getRightBox());
   }
 
   // checks if this fish's hitbox falls 
   // within another fish's hitbox in the y axis
-  boolean checkCollideY(AFish other) { //-----------------------------------------------------------------------------------------------------------
+  boolean checkCollideY(AFish other) {
     return other.withinHitboxY(this.getTopBox())
         || other.withinHitboxY(this.getBottomBox());
   }
 
   // returns true if the given x value is within the range of the fish's hitbox
-  boolean withinHitboxX(int xVal) { //-----------------------------------------------------------------------------------------------------------
+  boolean withinHitboxX(int xVal) { 
     return (xVal >= this.getLeftBox())
         && (xVal <= this.getRightBox());
   }
 
   // returns true if the given y value is within the range of the fish's hitbox
-  boolean withinHitboxY(int yVal) { //-----------------------------------------------------------------------------------------------------------
+  boolean withinHitboxY(int yVal) { 
     return (yVal >= this.getTopBox())
         && (yVal <= this.getBottomBox());
   }
 
   // gives the x value of the left side of the hitbox
-  int getLeftBox() { //-----------------------------------------------------------------------------------------------------------
+  int getLeftBox() { 
     if (this.movingRight) {
       return (this.x - (this.size * SCALE * 3));
     } else {
@@ -201,7 +204,7 @@ abstract class AFish implements IFish {
   }
 
   // gives the x value of the right side of the hitbox
-  int getRightBox() { //-----------------------------------------------------------------------------------------------------------
+  int getRightBox() { 
     if (this.movingRight) {
       return this.x;
     } else {
@@ -210,12 +213,12 @@ abstract class AFish implements IFish {
   }
 
   // gives the y value of the top of the hitbox
-  int getTopBox() {//-----------------------------------------------------------------------------------------------------------
+  int getTopBox() {
     return this.y - (this.size * SCALE / 2);
   }
 
   // gives the y value of the bottom of the hitbox
-  int getBottomBox() {//-----------------------------------------------------------------------------------------------------------
+  int getBottomBox() {
     return this.y + (this.size * SCALE / 2);
   }
 
@@ -423,7 +426,7 @@ class ConsLoBot implements ILoBot {
   }
 
   // Adds first fish to the image and then recurs
-  public WorldImage drawBots(WorldImage img) { //-----------------------------------------------------------------------------------------------------------
+  public WorldImage drawBots(WorldImage img) {
     return rest.drawBots(((img.movePinhole(this.first.x, this.first.y)).overlayImages(
         this.first.drawFish())).movePinhole(this.first.x * -1, this.first.y * -1));
   }
@@ -433,7 +436,7 @@ class ConsLoBot implements ILoBot {
     return new ConsLoBot(this.first.update(), this.rest.update());
   }
   
-  public PlayerFish checkCollisions(PlayerFish p) { //-----------------------------------------------------------------------------------------------------------
+  public PlayerFish checkCollisions(PlayerFish p) { 
     return this.rest.checkCollisions(p.collision(this.first));
   }
   
@@ -481,19 +484,58 @@ class ExamplesFishy {
   Random rand = new Random(5);
   Fishy w = new Fishy(this.player1);
   Fishy testW = new Fishy(this.player1, rand);
+  Fishy testWwBots = new Fishy(this.player1, rand, testW.generateFish(1, new Random(5)));
   ILoBot testEmptyBot = new MtLoBot();
   BotFish botFish = new BotFish(this.rand, 0, 100, true, 5, Color.yellow);
   BotFish botFishR = new BotFish(this.rand, 0, 100, true, 5, Color.yellow);
   ILoBot testBot = new ConsLoBot(botFish, testEmptyBot);
   BotFish botFishL = new BotFish(rand, 800, 100, false, 1, Color.black);
+  WorldImage emptyImg = new EmptyImage().movePinhole(-400, -300);
 
   // a class to test Fishy
   boolean testFishy(Tester t) {
     return w.bigBang(800, 600, .05);
   }
   
+  // ~ test for Fishy class ~
+  // test onKeyEvent
+  
+  // method to testGenerateBots
+  boolean testGenerateBots(Tester t) {
+    return t.checkExpect(testW.generateFish(0, new Random(5)), new MtLoBot())
+        && t.checkExpect(testW.generateFish(1, new Random(5)), 
+            new ConsLoBot(new BotFish(new Random(5)), new MtLoBot()));
+  }
+  
+  // test onTick
+  
+  // test worldEnds
+  
+  // test lastScene
+  
+  
   // ~ tests for AFish class ~
   // test drawFish
+  boolean testDrawFish(Tester t) {
+    return t.checkExpect(botFishR.drawFish(), new BesideImage(
+        new RotateImage(
+            new EquilateralTriangleImage(50, 
+                OutlineMode.SOLID, Color.yellow), 
+            90), 
+        new EllipseImage(50 * 2, 
+            50, 
+            OutlineMode.SOLID, Color.yellow))
+        .movePinhole(50 * 1.5, 0))
+        && t.checkExpect(botFishL.drawFish(), new BesideImage( 
+            new EllipseImage(20, 
+                10, 
+                OutlineMode.SOLID, Color.black), 
+            new RotateImage(
+                new EquilateralTriangleImage(10, 
+                    OutlineMode.SOLID, Color.black), 
+                270))
+            .movePinhole(-10 * 1.5, 0));
+  }
   
   // test willCollide
   
@@ -506,6 +548,7 @@ class ExamplesFishy {
   // test getLeftBox and getRightBox
   
   // test getTopBox and getBottomBox
+  
   
   // ~ tests for PlayerFish class ~
   // test moveFish
@@ -547,6 +590,21 @@ class ExamplesFishy {
         && t.checkExpect(player2.isBigEnough(), true);
   }
   
+  
+  // ~ tests for the BotFish class ~
+  //method to test the update method for the BotFish
+  boolean testUpdateBotFish(Tester t) {
+   return t.checkExpect(botFishR.update(), new BotFish(rand, 3, 100, true, 5, Color.yellow))
+       && t.checkExpect(botFishL.update(), new BotFish(rand, 795, 100, false, 1, Color.black));
+  }
+  
+  //tests the random color method
+  boolean testRandomColor(Tester t) {
+    return t.checkExpect(botFishL.randomColor(new Random(1)), Color.green)
+        && t.checkExpect(botFishR.randomColor(new Random(2)), Color.gray);
+  }
+  
+  // ~ tests for the ILoBot class ~
   // test for checkDead
   boolean testCheckDead(Tester t) {
     return t.checkExpect(this.testEmptyBot.checkDead(player1, rand), 
@@ -562,26 +620,15 @@ class ExamplesFishy {
    return t.checkExpect(testEmptyBot.update(), testEmptyBot)
        && t.checkExpect(testBot.update(), new ConsLoBot(botFishR.update(), testEmptyBot));
   }
-  
-  //method to test the update method for the BotFish
-  boolean testUpdateBotFish(Tester t) {
-   return t.checkExpect(botFishR.update(), new BotFish(rand, 3, 100, true, 5, Color.yellow))
-       && t.checkExpect(botFishL.update(), new BotFish(rand, 795, 100, false, 1, Color.black));
-  }
-  
-  //tests the random color method
-  boolean testRandomColor(Tester t) {
-   return t.checkExpect(botFishL.randomColor(new Random(1)), Color.green)
-       && t.checkExpect(botFishR.randomColor(new Random(2)), Color.gray);
-  }
-  
-  // method to testGenerateBots
-  boolean testGenerateBots(Tester t) {
-    return t.checkExpect(testW.generateFish(0, new Random(5)), new MtLoBot())
-        && t.checkExpect(testW.generateFish(1, new Random(5)), 
-            new ConsLoBot(new BotFish(new Random(5)), new MtLoBot()));
-  }
 
+  // method to test the drawBots method
+  boolean testDrawBots(Tester t) {
+    return t.checkExpect(testEmptyBot.drawBots(emptyImg), emptyImg)
+        && t.checkExpect(testBot.drawBots(emptyImg), ((((emptyImg
+            .movePinhole(0, 100))
+            .overlayImages(botFish.drawFish())))
+            .movePinhole(0, -100)));
+  }
   
-  
+  // method to test the checkCollisions method
 }
