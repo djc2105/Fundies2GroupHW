@@ -488,7 +488,7 @@ class MtLoBot implements ILoBot {
     return new MtLoBot();
   }
   
-  public PlayerFish checkCollisions(PlayerFish p) { //-----------------------------------------------------------------------------------------------------------
+  public PlayerFish checkCollisions(PlayerFish p) { 
     return p;
   }
   
@@ -503,18 +503,25 @@ class ExamplesFishy {
   // example variables
   PlayerFish player1 = new PlayerFish();
   PlayerFish player2 = new PlayerFish(0, 137, 11, -10, Color.red, false);
+  PlayerFish player22 = new PlayerFish(0, 137, 11, -10, Color.red, false);
   PlayerFish player3 = new PlayerFish(800, 600, 1, 0, Color.red, true);
   PlayerFish player4 = new PlayerFish(0, 0, 1, 0, Color.red, true);
+  PlayerFish player5 = new PlayerFish(0, 0, 11, 0, Color.red, true);
+  PlayerFish player6 = new PlayerFish(0, 0, 1, -10, Color.red, true);
   Random rand = new Random(5);
   Fishy w = new Fishy(this.player1);
   Fishy testW = new Fishy(this.player1, rand);
   Fishy testWwBots = new Fishy(this.player1, rand, testW.generateFish(1, new Random(5)));
+  Fishy testWwNoBots = new Fishy(this.player1, rand, testW.generateFish(0, new Random(5)));
   ILoBot testEmptyBot = new MtLoBot();
   BotFish botFish = new BotFish(this.rand, 0, 100, true, 5, Color.yellow);
   BotFish botFishR = new BotFish(this.rand, 0, 100, true, 5, Color.yellow);
   ILoBot testBot = new ConsLoBot(botFish, testEmptyBot);
   BotFish botFishL = new BotFish(rand, 800, 100, false, 1, Color.black);
   WorldImage emptyImg = new EmptyImage().movePinhole(-400, -300);
+  Fishy winW = new Fishy(player5);
+  Fishy loseW = new Fishy(player6);
+  Fishy continueW = new Fishy(player3);
 
   // a class to test Fishy
   boolean testFishy(Tester t) {
@@ -523,6 +530,22 @@ class ExamplesFishy {
   
   // ~ test for Fishy class ~
   // test onKeyEvent
+  boolean testOnKeyEvent(Tester t) {
+    return t.checkExpect(testW.onKeyEvent("left"), 
+        new Fishy(this.player1.moveFish("left"), testW.rand, testW.bots))
+        && t.checkExpect(testW.onKeyEvent("right"), 
+            new Fishy(this.player1.moveFish("right"), testW.rand, testW.bots))
+        && t.checkExpect(testW.onKeyEvent("up"), 
+            new Fishy(this.player1.moveFish("up"), testW.rand, testW.bots))
+        && t.checkExpect(testW.onKeyEvent("down"), 
+            new Fishy(this.player1.moveFish("down"), testW.rand, testW.bots))
+        && t.checkExpect(testW.onKeyEvent(":("), 
+            new Fishy(this.player1.moveFish(":("), testW.rand, testW.bots))
+        && t.checkExpect(testW.onKeyEvent("f"), 
+            new Fishy(this.player1.moveFish("f"), testW.rand, testW.bots))
+        && t.checkExpect(testW.onKeyEvent(";~;"), 
+            new Fishy(this.player1.moveFish(";~;"), testW.rand, testW.bots));
+  }
   
   // method to testGenerateBots
   boolean testGenerateBots(Tester t) {
@@ -532,10 +555,27 @@ class ExamplesFishy {
   }
   
   // test onTick
+  boolean testOnTick(Tester t) {
+    return t.checkExpect(testWwNoBots.onTick(), testWwNoBots)
+        && t.checkExpect(testWwBots.onTick(), new Fishy(this.player1, 
+            this.rand, new ConsLoBot(new BotFish(rand, 3, 137, true, 5, Color.pink),
+                new MtLoBot())));
+  }
   
   // test worldEnds
+  boolean testWorldEnds(Tester t) {
+    return t.checkExpect(loseW.worldEnds(), new WorldEnd(true, loseW.lastScene("You Got Eaten!")))
+        && t.checkExpect(winW.worldEnds(), new WorldEnd(true, winW.lastScene("Congratulations, You Win!!!")))
+        && t.checkExpect(continueW.worldEnds(), new WorldEnd(false, continueW.makeScene()));
+  }
   
   // test lastScene
+  boolean testLastScene(Tester t) {
+    return t.checkExpect(winW.lastScene(":("), 
+        winW.makeScene().placeImageXY(new TextImage(":(", Color.red), 100,40))
+        && t.checkExpect(winW.lastScene(":)"), 
+            winW.makeScene().placeImageXY(new TextImage(":)", Color.red), 100,40));
+} 
   
   
   // ~ tests for AFish class ~
@@ -694,8 +734,8 @@ class ExamplesFishy {
   boolean testCheckCollisions(Tester t) {
     return t.checkExpect(this.testEmptyBot.checkCollisions(this.player2), 
         this.player2)
-        && t.checkExpect(this.testBot.checkCollisions(this.player2), 
-            new PlayerFish(0, 137, 11, -8, Color.red, false));
+        && t.checkExpect(this.testBot.checkCollisions(this.player22), 
+            new PlayerFish(0, 137, 11, -9, Color.red, false));
   }
   
 }
