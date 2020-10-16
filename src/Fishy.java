@@ -1,14 +1,14 @@
+
 import tester.Tester;
 import javalib.funworld.*;
 import javalib.worldimages.*;
 import java.awt.Color;
 import java.util.Random;
 
-/*
+/* 
  * Sizes range from 1 to 10 for bots
  *    Eat 3 fish to grow
  *    Player starts at 1 and can eat size 1
- * 
  */
 
 // contains the Fishy! game
@@ -38,7 +38,7 @@ class Fishy extends World {
     this.rand = rand;
   }
 
-  // Constructor for use in testing
+  // Constructor for use in code
   Fishy(PlayerFish player, Random rand, ILoBot bots) {
     this.player = player;
     this.rand = rand;
@@ -79,7 +79,6 @@ class Fishy extends World {
    *   this.bots.update() ... ILoBot
    *   this.bots.checkCollisions(PlayerFish) ... PlayerFish
    *   this.bots.checkDead(PlayerFish, Random) ... ILoBot
-   *   
    */
 
   //moves the player when a key is pressed
@@ -153,7 +152,7 @@ abstract class AFish implements IFish {
   int size;
   Color color;
   boolean movingRight;
-
+ 
   // draws the AFish
   public WorldImage drawFish() { 
     if (movingRight) {
@@ -181,6 +180,9 @@ abstract class AFish implements IFish {
 
   // checks if a collision will occur
   boolean willCollide(AFish other) { 
+    /* 
+     * see the AFish class for other's template
+     */
     return (this.checkCollideX(other)
         || other.checkCollideX(this))
         && (this.checkCollideY(other)
@@ -189,12 +191,18 @@ abstract class AFish implements IFish {
 
   // determines if the playable fish can eat a BotFish
   boolean canEat(AFish other) {
+    /* 
+     * see the AFish class for other's template
+     */
     return (this.size >= other.size);
   }
 
   // checks if this fish's hitbox falls 
   // within another fish's hitbox in the x axis
   boolean checkCollideX(AFish other) { 
+    /* 
+     * see the AFish class for other's template
+     */
     return other.withinHitboxX(this.getLeftBox())
         || other.withinHitboxX(this.getRightBox());
   }
@@ -202,6 +210,9 @@ abstract class AFish implements IFish {
   // checks if this fish's hitbox falls 
   // within another fish's hitbox in the y axis
   boolean checkCollideY(AFish other) {
+    /* 
+     * see the AFish class for other's template
+     */
     return other.withinHitboxY(this.getTopBox())
         || other.withinHitboxY(this.getBottomBox());
   }
@@ -276,6 +287,33 @@ class PlayerFish extends AFish {
     super.color = color;
     super.movingRight = movingRight;
   }
+  
+  /* fields:  
+   *   super.x ... int
+   *   super.y ... int
+   *   super.size ... int
+   *   this.fishUntilGrow ... int
+   *   super.color ... Color
+   *   super.movingRight ... boolean
+   * methods: 
+   *   this.drawFish() ... WorldImage
+   *   this.willCollide(AFish) ... boolean
+   *   this.canEat(AFish) ... boolean
+   *   this.checkCollideX(AFish) ... boolean
+   *   this.checkCollideY(AFish) ... boolean
+   *   this.withinHitboxX(int) ... boolean
+   *   this.withinHitboxY(int) ... boolean
+   *   this.getLeftBox() ... int
+   *   this.getRightBox() ... int
+   *   this.getTopBox() ... int
+   *   this.getBottomBox() ... int
+   *   this.moveFish(String) ... PlayerFish
+   *   this.collision(BotFish) ... PlayerFish
+   *   this.isEaten() ... boolean
+   *   this.isBigEnough() ... boolean
+   * methods for fields: 
+   * 
+   */
 
   // moves the fish based on the key input
   // if the fish leaves the screen, return on the other side
@@ -323,7 +361,10 @@ class PlayerFish extends AFish {
   }
   
   // if a collision happens, have the fish eat if it can
-  public PlayerFish collision(BotFish other) { // tested
+  public PlayerFish collision(BotFish other) { 
+    /* 
+     * see the BotFish class for other's template
+     */
     if (this.willCollide(other) && this.canEat(other)) {
       this.fishUntilGrow ++;
       if (this.fishUntilGrow == 3) {
@@ -339,11 +380,13 @@ class PlayerFish extends AFish {
     return this;
   }
   
-  public boolean isEaten() { // tested
+  // checks if the player fish has been eaten by a bigger fish
+  public boolean isEaten() {
     return this.fishUntilGrow < 0;
   }
   
-  public boolean isBigEnough() { // tested
+  // checks if the player fish is big enough to win
+  public boolean isBigEnough() {
     return this.size > 10;
   }
 
@@ -351,9 +394,11 @@ class PlayerFish extends AFish {
 
 // the non-playable fish in the Fishy! game
 class BotFish extends AFish {
+  
+  // variables
   Random rand;
 
-  // constructor
+  // convenience constructor
   public BotFish(Random rand) {
     int randHeight = rand.nextInt(SCREEN_HEIGHT - 20) + 10;
     int rand0o1 = rand.nextInt(2);
@@ -373,6 +418,7 @@ class BotFish extends AFish {
     }
   }
 
+  // constructor for code purposes
   public BotFish(Random rand, int x, int y, boolean movingRight, int size, Color c) {
     this.rand = rand;
     super.x = x;
@@ -382,6 +428,21 @@ class BotFish extends AFish {
     super.color = c;
   }
 
+  /* fields: 
+   *   this.rand ... Random
+   *   super.x ... int
+   *   super.y ... int
+   *   super.movingRight ... Boolean
+   *   super.size ... int
+   *   super.color ... Color
+   * methods: 
+   *   this.update() ... BotFish
+   *   this.randomColor(Random) ... Color
+   * methods for fields: 
+   * 
+   */
+  
+  // changes the bots position for 1 tick
   public BotFish update() { 
     int speed;
 
@@ -402,6 +463,7 @@ class BotFish extends AFish {
     return new BotFish(this.rand, newX, this.y, this.movingRight, this.size, this.color);
   }
 
+  // generates a random color based off of the given Random object
   public Color randomColor(Random rand) {
     int randInt = rand.nextInt(5);
     if (randInt == 0) { 
@@ -448,6 +510,23 @@ class ConsLoBot implements ILoBot {
     this.first = first;
     this.rest = rest;
   }
+  
+  /* fields: 
+   *   this.first ... BotFish
+   *   this.rest ... ILoBot
+   * methods: 
+   *   this.drawBots(WorldImage) ... WorldImage
+   *   this.update() ... ILoBot
+   *   this.checkCollisions(PlayerFish) ... PlayerFish
+   *   this.checkDead(PlayerFish, Random) ... ILoBot
+   * methods for fields: 
+   *   this.first.update() ... BotFish
+   *   this.first.randomColor(Random) ... Color
+   *   this.rest.drawBots(WorldImage) ... WorldImage
+   *   this.rest.update() ... ILoBot
+   *   this.rest.checkCollisions(PlayerFish) ... PlayerFish
+   *   this.rest.checkDead(PlayerFish, Random) ... ILoBot
+   */
 
   // Adds first fish to the image and then recurs
   public WorldImage drawBots(WorldImage img) {
@@ -460,11 +539,21 @@ class ConsLoBot implements ILoBot {
     return new ConsLoBot(this.first.update(), this.rest.update());
   }
   
+  // checks if any of the fish collide with the playerfish
+  // returns the playerfish after any collisions
   public PlayerFish checkCollisions(PlayerFish p) { 
+    /* 
+     * see the PlayerFish class for p's template
+     */
     return this.rest.checkCollisions(p.collision(this.first));
   }
   
+  // checks if any of the fish collide with the playerfish
+  // returns the list of bots after any collisions
   public ILoBot checkDead(PlayerFish p, Random rand) { 
+    /* 
+     * see the PlayerFish class for p's template
+     */
     if (p.willCollide(this.first) && p.canEat(this.first)) {
       return new ConsLoBot(new BotFish(rand), 
           this.rest.checkDead(p, rand));
@@ -477,6 +566,17 @@ class ConsLoBot implements ILoBot {
 
 // an empty list of BotFish
 class MtLoBot implements ILoBot {
+  
+  /* fields: 
+   * 
+   * methods: 
+   *   this.drawBots(WorldImage) ... WorldImage
+   *   this.update() ... ILoBot
+   *   this.checkCollisions(PlayerFish) ... PlayerFish
+   *   this.checkDead(PlayerFish, Random) ... ILoBot
+   * methods for fields: 
+   * 
+   */
 
   // Returns the completed image
   public WorldImage drawBots(WorldImage img) {
@@ -488,11 +588,21 @@ class MtLoBot implements ILoBot {
     return new MtLoBot();
   }
   
+  // checks if any of the fish in the empty list collide with the player
+  // returns the player after any collisions
   public PlayerFish checkCollisions(PlayerFish p) { 
+    /* 
+     * see the PlayerFish class for p's template
+     */
     return p;
   }
   
+  // checks if any fish in the empty list collide with the player
+  // returns the empty list after any collisions
   public ILoBot checkDead(PlayerFish p, Random rand) {
+    /* 
+     * see the PlayerFish class for p's template
+     */
     return this;
   }
   
