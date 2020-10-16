@@ -15,7 +15,7 @@ import java.util.Random;
 
 // contains the Fishy! game
 class Fishy extends World {
-
+  
   // constants
   int screenWidth = 800;
   int screenHeight = 600;
@@ -60,12 +60,12 @@ class Fishy extends World {
    */
 
   //moves the player when a key is pressed
-  public World onKeyEvent(String ke) {
+  public World onKeyEvent(String ke) { //-----------------------------------------------------------------------------------------------------------
     return new Fishy(player.moveFish(ke), this.rand, this.bots);
   }
 
   // Generates a ILoFIsh of Botfish of length n
-  ILoBot generateFish(int n) {
+  ILoBot generateFish(int n) { //-----------------------------------------------------------------------------------------------------------
     if (n == 0) {
       return new MtLoBot();
     }
@@ -84,12 +84,12 @@ class Fishy extends World {
             .movePinhole(screenWidth / -2, screenHeight / -2)), 0, 0);
   }
 
-  public World onTick() {
+  public World onTick() { //-----------------------------------------------------------------------------------------------------------
     return new Fishy(this.bots.checkCollisions(this.player), 
         this.rand, this.bots.checkDead(this.player).update());
   }
   
-  public WorldEnd worldEnds() {
+  public WorldEnd worldEnds() { //-----------------------------------------------------------------------------------------------------------
     if (this.player.isEaten()) {
       return new WorldEnd(true, this.lastScene("you got eaten"));
     } else if (this.player.isBigEnough()) {
@@ -99,7 +99,7 @@ class Fishy extends World {
   }
   
   //produce the last image of this world by adding text to the image 
-  public WorldScene lastScene(String s) {
+  public WorldScene lastScene(String s) { //-----------------------------------------------------------------------------------------------------------
     return this.makeScene().placeImageXY(new TextImage(s, Color.red), 100,
         40);
   }
@@ -130,7 +130,7 @@ abstract class AFish implements IFish {
   boolean movingRight;
 
   // draws the AFish
-  public WorldImage drawFish() {
+  public WorldImage drawFish() { //-----------------------------------------------------------------------------------------------------------
     if (movingRight) {
       return new BesideImage(
           new RotateImage(
@@ -155,7 +155,7 @@ abstract class AFish implements IFish {
   }
 
   // checks if a collision will occur
-  boolean willCollide(AFish other) {
+  boolean willCollide(AFish other) { //-----------------------------------------------------------------------------------------------------------
     return (this.checkCollideX(other)
         || other.checkCollideX(this))
         && (this.checkCollideY(other)
@@ -169,32 +169,32 @@ abstract class AFish implements IFish {
 
   // checks if this fish's hitbox falls 
   // within another fish's hitbox in the x axis
-  boolean checkCollideX(AFish other) {
+  boolean checkCollideX(AFish other) { //-----------------------------------------------------------------------------------------------------------
     return other.withinHitboxX(this.getLeftBox())
         || other.withinHitboxX(this.getRightBox());
   }
 
   // checks if this fish's hitbox falls 
   // within another fish's hitbox in the y axis
-  boolean checkCollideY(AFish other) {
+  boolean checkCollideY(AFish other) { //-----------------------------------------------------------------------------------------------------------
     return other.withinHitboxY(this.getTopBox())
         || other.withinHitboxY(this.getBottomBox());
   }
 
   // returns true if the given x value is within the range of the fish's hitbox
-  boolean withinHitboxX(int xVal) {
+  boolean withinHitboxX(int xVal) { //-----------------------------------------------------------------------------------------------------------
     return (xVal >= this.getLeftBox())
         && (xVal <= this.getRightBox());
   }
 
   // returns true if the given y value is within the range of the fish's hitbox
-  boolean withinHitboxY(int yVal) {
+  boolean withinHitboxY(int yVal) { //-----------------------------------------------------------------------------------------------------------
     return (yVal >= this.getTopBox())
         && (yVal <= this.getBottomBox());
   }
 
   // gives the x value of the left side of the hitbox
-  int getLeftBox() {
+  int getLeftBox() { //-----------------------------------------------------------------------------------------------------------
     if (this.movingRight) {
       return (this.x - (this.size * SCALE * 3));
     } else {
@@ -203,7 +203,7 @@ abstract class AFish implements IFish {
   }
 
   // gives the x value of the right side of the hitbox
-  int getRightBox() {
+  int getRightBox() { //-----------------------------------------------------------------------------------------------------------
     if (this.movingRight) {
       return this.x;
     } else {
@@ -212,12 +212,12 @@ abstract class AFish implements IFish {
   }
 
   // gives the y value of the top of the hitbox
-  int getTopBox() {
+  int getTopBox() {//-----------------------------------------------------------------------------------------------------------
     return this.y - (this.size * SCALE);
   }
 
   // gives the y value of the bottom of the hitbox
-  int getBottomBox() {
+  int getBottomBox() {//-----------------------------------------------------------------------------------------------------------
     return this.y + (this.size * SCALE);
   }
 
@@ -254,7 +254,7 @@ class PlayerFish extends AFish {
 
   // moves the fish based on the key input
   // if the fish leaves the screen, return on the other side
-  public PlayerFish moveFish(String ke) {
+  public PlayerFish moveFish(String ke) {//-----------------------------------------------------------------------------------------------------------
     if (ke.equals("left")) {
       int newX = super.x - 5;
       if (newX < 0) {
@@ -298,7 +298,7 @@ class PlayerFish extends AFish {
   }
   
   // if a collision happens, have the fish eat if it can
-  public PlayerFish collision(BotFish other) {
+  public PlayerFish collision(BotFish other) {//-----------------------------------------------------------------------------------------------------------
     if (this.willCollide(other) && this.canEat(other)) {
       this.fishUntilGrow ++;
       if (this.fishUntilGrow == 3) {
@@ -314,11 +314,11 @@ class PlayerFish extends AFish {
     return this;
   }
   
-  public boolean isEaten() {
+  public boolean isEaten() {//-----------------------------------------------------------------------------------------------------------
     return this.fishUntilGrow < 0;
   }
   
-  public boolean isBigEnough() {
+  public boolean isBigEnough() {//-----------------------------------------------------------------------------------------------------------
     return this.size > 10;
   }
 
@@ -357,7 +357,7 @@ class BotFish extends AFish {
     super.color = c;
   }
 
-  public BotFish update() {
+  public BotFish update() { //-----------------------------------------------------------------------------------------------------------
     int speed;
 
     if (super.x < -300 || super.x > 1100) {
@@ -377,7 +377,7 @@ class BotFish extends AFish {
     return new BotFish(this.rand, newX, this.y, this.movingRight, this.size, this.color);
   }
 
-  public Color randomColor() {
+  public Color randomColor() { //-----------------------------------------------------------------------------------------------------------
     int rand = this.rand.nextInt(5);
     if(rand == 0) { 
       return Color.green; 
@@ -419,27 +419,27 @@ class ConsLoBot implements ILoBot {
   ILoBot rest;
 
   // constructor
-  public ConsLoBot(BotFish first, ILoBot rest) {
+  public ConsLoBot(BotFish first, ILoBot rest) { //-----------------------------------------------------------------------------------------------------------
     this.first = first;
     this.rest = rest;
   }
 
   // Adds first fish to the image and then recurs
-  public WorldImage drawBots(WorldImage img) {
+  public WorldImage drawBots(WorldImage img) { //-----------------------------------------------------------------------------------------------------------
     return rest.drawBots(((img.movePinhole(this.first.x, this.first.y)).overlayImages(
         this.first.drawFish())).movePinhole(this.first.x * -1, this.first.y * -1));
   }
 
   // Updates first fishes position
-  public ILoBot update() {
+  public ILoBot update() { //-----------------------------------------------------------------------------------------------------------
     return new ConsLoBot(this.first.update(), this.rest.update());
   }
   
-  public PlayerFish checkCollisions(PlayerFish p) {
+  public PlayerFish checkCollisions(PlayerFish p) { //-----------------------------------------------------------------------------------------------------------
     return this.rest.checkCollisions(p.collision(this.first));
   }
   
-  public ILoBot checkDead(PlayerFish p) {
+  public ILoBot checkDead(PlayerFish p) { //-----------------------------------------------------------------------------------------------------------
     if (p.willCollide(this.first) && p.canEat(this.first)) {
       return new ConsLoBot(new BotFish(new Random()), 
           this.rest.checkDead(p));
@@ -459,15 +459,15 @@ class MtLoBot implements ILoBot {
   }
 
   // Returns an MtLoBot to finish the list
-  public ILoBot update() {
+  public ILoBot update() { //-----------------------------------------------------------------------------------------------------------
     return new MtLoBot();
   }
   
-  public PlayerFish checkCollisions(PlayerFish p) {
+  public PlayerFish checkCollisions(PlayerFish p) { //-----------------------------------------------------------------------------------------------------------
     return p;
   }
   
-  public ILoBot checkDead(PlayerFish p) {
+  public ILoBot checkDead(PlayerFish p) { //-----------------------------------------------------------------------------------------------------------
     return this;
   }
   
