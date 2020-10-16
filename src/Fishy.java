@@ -1,9 +1,6 @@
 import tester.Tester;
 import javalib.funworld.*;
 import javalib.worldimages.*;
-import sun.reflect.generics.tree.BottomSignature;
-import sun.tools.tree.ThisExpression;
-
 import java.awt.Color;
 import java.util.Random;
 
@@ -49,15 +46,40 @@ class Fishy extends World {
   }
 
   /* fields: 
+   *   this.screenWidth ... int
+   *   this.screenHeight ... int
+   *   this.background ... WorldImage
    *   this.player ... PlayerFish
    *   this.rand ... Random
+   *   this.bots ... ILoBot
    * methods: 
    *   this.onKeyEvent(String) ... World
+   *   this.generateFish(int, Random) ... ILoBot
    *   this.makeScene() ... WorldScene
+   *   this.onTick() ... World
+   *   this.worldEnds() ... WorldEnd
+   *   this.lastScene(String) ... WorldImage
    * methods for fields:
    *   this.player.drawFish() ... WorldImage
+   *   this.player.willCollide(AFish) ... boolean
+   *   this.player.canEat(AFish) ... boolean
+   *   this.player.checkCollideX(AFish) ... boolean
+   *   this.player.checkCollideY(AFish) ... boolean
+   *   this.player.withinHitboxX(int) ... boolean
+   *   this.player.withinHitboxY(int) ... boolean
+   *   this.player.getLeftBox() ... int
+   *   this.player.getRightBox() ... int
+   *   this.player.getTopBox() ... int
+   *   this.player.getBottomBox() ... int
    *   this.player.moveFish(String) ... PlayerFish
-   *   this.player.canEat(BotFish) ... Boolean
+   *   this.player.collision(BotFish) ... PlayerFish
+   *   this.player.isEaten() ... boolean
+   *   this.player.isBigEnough() ... boolean
+   *   this.bots.drawBots(WorldImage) ... WorldImage
+   *   this.bots.update() ... ILoBot
+   *   this.bots.checkCollisions(PlayerFish) ... PlayerFish
+   *   this.bots.checkDead(PlayerFish, Random) ... ILoBot
+   *   
    */
 
   //moves the player when a key is pressed
@@ -85,16 +107,18 @@ class Fishy extends World {
             .movePinhole(screenWidth / -2, screenHeight / -2)), 0, 0);
   }
 
+  // updates the BotFishs' positions and checks for eaten fish every tick
   public World onTick() { 
     return new Fishy(this.bots.checkCollisions(this.player), 
         this.rand, this.bots.checkDead(this.player, rand).update());
   }
   
+  // checks if the game is over
   public WorldEnd worldEnds() { 
     if (this.player.isEaten()) {
-      return new WorldEnd(true, this.lastScene("you got eaten"));
+      return new WorldEnd(true, this.lastScene("You Got Eaten!"));
     } else if (this.player.isBigEnough()) {
-      return new WorldEnd(true, this.lastScene("you win"));
+      return new WorldEnd(true, this.lastScene("Congratulations, You Win!!!"));
     }
     return new WorldEnd(false, this.makeScene());
   }
@@ -478,9 +502,9 @@ class ExamplesFishy {
 
   // example variables
   PlayerFish player1 = new PlayerFish();
-  PlayerFish player2 = new PlayerFish(0, 137, 11, -10, Color.red, true);
+  PlayerFish player2 = new PlayerFish(0, 137, 11, -10, Color.red, false);
   PlayerFish player3 = new PlayerFish(800, 600, 1, 0, Color.red, true);
-  PlayerFish player4 = new PlayerFish(400, 0, 1, 0, Color.red, true);
+  PlayerFish player4 = new PlayerFish(0, 0, 1, 0, Color.red, true);
   Random rand = new Random(5);
   Fishy w = new Fishy(this.player1);
   Fishy testW = new Fishy(this.player1, rand);
@@ -538,17 +562,51 @@ class ExamplesFishy {
   }
   
   // test willCollide
+  boolean testWillCollide(Tester t) {
+    return t.checkExpect(this.botFish.willCollide(this.player1), false)
+        && t.checkExpect(this.player2.willCollide(this.botFish), true);
+  }
   
   // test canEat
+  boolean testCanEat(Tester t) {
+    return t.checkExpect(this.player1.canEat(this.botFish), false)
+        && t.checkExpect(this.player2.canEat(this.botFish), true);
+  }
   
   // test checkCollideX and CheckCollideY
+  boolean testCheckCollide(Tester t) {
+    return t.checkExpect(this.player1.checkCollideX(this.botFish), false)
+        && t.checkExpect(this.player1.checkCollideY(this.botFish), false)
+        && t.checkExpect(this.botFish.checkCollideX(this.player2), true)
+        && t.checkExpect(this.botFish.checkCollideY(this.player2), true);
+  }
   
   // test withinHitboxX and withinHitboxY
+  boolean testWithinHitbox(Tester t) {
+    return t.checkExpect(this.player1.withinHitboxX(400), true)
+        && t.checkExpect(this.player1.withinHitboxY(295), true)
+        && t.checkExpect(this.player2.withinHitboxX(500), false)
+        && t.checkExpect(this.player2.withinHitboxY(600), false);
+  }
   
   // test getLeftBox and getRightBox
+  boolean testGetXBox(Tester t) { 
+    // not to be confused with testGetXBoxSeriesX, 
+    // which will be done once it releases
+    return t.checkExpect(this.player1.getLeftBox(), 370)
+        && t.checkExpect(this.player1.getRightBox(), 400)
+        && t.checkExpect(this.player2.getLeftBox(), 0)
+        && t.checkExpect(this.player2.getRightBox(), 330);     
+  }
   
   // test getTopBox and getBottomBox
-  
+  boolean testGetYBox(Tester t) { 
+    // not to be confused w - wait I made this joke already
+    return t.checkExpect(this.player1.getTopBox(), 295)
+        && t.checkExpect(this.player1.getBottomBox(), 305)
+        && t.checkExpect(this.player3.getTopBox(), 595)
+        && t.checkExpect(this.player3.getBottomBox(), 605);
+  }
   
   // ~ tests for PlayerFish class ~
   // test moveFish
@@ -559,12 +617,12 @@ class ExamplesFishy {
             new PlayerFish(5, 600, 1, 0, Color.red, true))
         && t.checkExpect(this.player1.moveFish("left"), 
             new PlayerFish(395, 300, 1, 0, Color.red, false))
-        && t.checkExpect(this.player2.moveFish("left"), 
-            new PlayerFish(795, 137, 11, -10, Color.red, false))
+        && t.checkExpect(this.player4.moveFish("left"), 
+            new PlayerFish(795, 0, 1, 0, Color.red, false))
         && t.checkExpect(this.player1.moveFish("up"), 
             new PlayerFish(400, 295, 1, 0, Color.red, true))
         && t.checkExpect(this.player4.moveFish("up"), 
-            new PlayerFish(400, 595, 1, 0, Color.red, true))
+            new PlayerFish(0, 595, 1, 0, Color.red, true))
         && t.checkExpect(this.player1.moveFish("down"), 
             new PlayerFish(400, 305, 1, 0, Color.red, true))
         && t.checkExpect(this.player3.moveFish("down"), 
@@ -575,7 +633,7 @@ class ExamplesFishy {
   boolean testCollision(Tester t) {
     return t.checkExpect(this.player1.collision(this.botFish), this.player1)
         && t.checkExpect(this.player2.collision(this.botFish), 
-            new PlayerFish(0, 137, 11, -9, Color.red, true));
+            new PlayerFish(0, 137, 11, -9, Color.red, false));
   }
   
   // test isEaten
@@ -594,8 +652,10 @@ class ExamplesFishy {
   // ~ tests for the BotFish class ~
   //method to test the update method for the BotFish
   boolean testUpdateBotFish(Tester t) {
-   return t.checkExpect(botFishR.update(), new BotFish(rand, 3, 100, true, 5, Color.yellow))
-       && t.checkExpect(botFishL.update(), new BotFish(rand, 795, 100, false, 1, Color.black));
+   return t.checkExpect(botFishR.update(), 
+       new BotFish(rand, 3, 100, true, 5, Color.yellow))
+       && t.checkExpect(botFishL.update(), 
+           new BotFish(rand, 795, 100, false, 1, Color.black));
   }
   
   //tests the random color method
@@ -631,4 +691,28 @@ class ExamplesFishy {
   }
   
   // method to test the checkCollisions method
+  boolean testCheckCollisions(Tester t) {
+    return t.checkExpect(this.testEmptyBot.checkCollisions(this.player2), 
+        this.player2)
+        && t.checkExpect(this.testBot.checkCollisions(this.player2), 
+            new PlayerFish(0, 137, 11, -8, Color.red, false));
+  }
+  
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
