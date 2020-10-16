@@ -1,8 +1,6 @@
 import tester.Tester;
 import javalib.funworld.*;
 import javalib.worldimages.*;
-import sun.tools.tree.ThisExpression;
-
 import java.awt.Color;
 import java.util.Random;
 
@@ -86,7 +84,7 @@ class Fishy extends World {
 
   public World onTick() { //-----------------------------------------------------------------------------------------------------------
     return new Fishy(this.bots.checkCollisions(this.player), 
-        this.rand, this.bots.checkDead(this.player).update());
+        this.rand, this.bots.checkDead(this.player, rand).update());
   }
   
   public WorldEnd worldEnds() { //-----------------------------------------------------------------------------------------------------------
@@ -213,12 +211,12 @@ abstract class AFish implements IFish {
 
   // gives the y value of the top of the hitbox
   int getTopBox() {//-----------------------------------------------------------------------------------------------------------
-    return this.y - (this.size * SCALE);
+    return this.y - (this.size * SCALE / 2);
   }
 
   // gives the y value of the bottom of the hitbox
   int getBottomBox() {//-----------------------------------------------------------------------------------------------------------
-    return this.y + (this.size * SCALE);
+    return this.y + (this.size * SCALE / 2);
   }
 
 }
@@ -254,7 +252,7 @@ class PlayerFish extends AFish {
 
   // moves the fish based on the key input
   // if the fish leaves the screen, return on the other side
-  public PlayerFish moveFish(String ke) {//-----------------------------------------------------------------------------------------------------------
+  public PlayerFish moveFish(String ke) {
     if (ke.equals("left")) {
       int newX = super.x - 5;
       if (newX < 0) {
@@ -298,7 +296,7 @@ class PlayerFish extends AFish {
   }
   
   // if a collision happens, have the fish eat if it can
-  public PlayerFish collision(BotFish other) {//-----------------------------------------------------------------------------------------------------------
+  public PlayerFish collision(BotFish other) { // tested
     if (this.willCollide(other) && this.canEat(other)) {
       this.fishUntilGrow ++;
       if (this.fishUntilGrow == 3) {
@@ -314,11 +312,11 @@ class PlayerFish extends AFish {
     return this;
   }
   
-  public boolean isEaten() {
+  public boolean isEaten() { // tested
     return this.fishUntilGrow < 0;
   }
   
-  public boolean isBigEnough() {
+  public boolean isBigEnough() { // tested
     return this.size > 10;
   }
 
@@ -407,7 +405,7 @@ interface ILoBot {
   PlayerFish checkCollisions(PlayerFish p);
   
   // checks if the player ate any of the fish in the list
-  ILoBot checkDead(PlayerFish p);
+  ILoBot checkDead(PlayerFish p, Random rand); // tested
 
 }
 
@@ -439,12 +437,12 @@ class ConsLoBot implements ILoBot {
     return this.rest.checkCollisions(p.collision(this.first));
   }
   
-  public ILoBot checkDead(PlayerFish p) { 
+  public ILoBot checkDead(PlayerFish p, Random rand) { 
     if (p.willCollide(this.first) && p.canEat(this.first)) {
-      return new ConsLoBot(new BotFish(new Random()), 
-          this.rest.checkDead(p));
+      return new ConsLoBot(new BotFish(rand), 
+          this.rest.checkDead(p, rand));
     } else {
-      return new ConsLoBot(this.first, this.rest.checkDead(p));
+      return new ConsLoBot(this.first, this.rest.checkDead(p, rand));
     }
   }
 
@@ -467,7 +465,7 @@ class MtLoBot implements ILoBot {
     return p;
   }
   
-  public ILoBot checkDead(PlayerFish p) { //-----------------------------------------------------------------------------------------------------------
+  public ILoBot checkDead(PlayerFish p, Random rand) {
     return this;
   }
   
@@ -478,6 +476,8 @@ class ExamplesFishy {
   // example variables
   PlayerFish player1 = new PlayerFish();
   PlayerFish player2 = new PlayerFish(0, 137, 11, -10, Color.red, true);
+  PlayerFish player3 = new PlayerFish(800, 600, 1, 0, Color.red, true);
+  PlayerFish player4 = new PlayerFish(400, 0, 1, 0, Color.red, true);
   Random rand = new Random(5);
   Fishy w = new Fishy(this.player1);
   Fishy testW = new Fishy(this.player1, rand);
@@ -492,12 +492,47 @@ class ExamplesFishy {
     return w.bigBang(800, 600, .05);
   }
   
-  // test for checkDead
-  boolean testCheckDead(Tester t) {
-    return t.checkExpect(this.testEmptyBot.checkDead(player1), 
-        this.testEmptyBot)
-        && t.checkExpect(this.testBot.checkDead(player1), 
-            this.testBot);
+  // ~ tests for AFish class ~
+  // test drawFish
+  
+  // test willCollide
+  
+  // test canEat
+  
+  // test checkCollideX and CheckCollideY
+  
+  // test withinHitboxX and withinHitboxY
+  
+  // test getLeftBox and getRightBox
+  
+  // test getTopBox and getBottomBox
+  
+  // ~ tests for PlayerFish class ~
+  // test moveFish
+  boolean testMoveFish(Tester t) {
+    return t.checkExpect(this.player1.moveFish("right"), 
+        new PlayerFish(405, 300, 1, 0, Color.red, true))
+        && t.checkExpect(this.player3.moveFish("right"), 
+            new PlayerFish(5, 600, 1, 0, Color.red, true))
+        && t.checkExpect(this.player1.moveFish("left"), 
+            new PlayerFish(395, 300, 1, 0, Color.red, false))
+        && t.checkExpect(this.player2.moveFish("left"), 
+            new PlayerFish(795, 137, 11, -10, Color.red, false))
+        && t.checkExpect(this.player1.moveFish("up"), 
+            new PlayerFish(400, 295, 1, 0, Color.red, true))
+        && t.checkExpect(this.player4.moveFish("up"), 
+            new PlayerFish(400, 595, 1, 0, Color.red, true))
+        && t.checkExpect(this.player1.moveFish("down"), 
+            new PlayerFish(400, 305, 1, 0, Color.red, true))
+        && t.checkExpect(this.player3.moveFish("down"), 
+            new PlayerFish(800, 5, 1, 0, Color.red, true));
+  }
+  
+  // test collision
+  boolean testCollision(Tester t) {
+    return t.checkExpect(this.player1.collision(this.botFish), this.player1)
+        && t.checkExpect(this.player2.collision(this.botFish), 
+            new PlayerFish(0, 137, 11, -9, Color.red, true));
   }
   
   // test isEaten
@@ -506,9 +541,20 @@ class ExamplesFishy {
         && t.checkExpect(this.player2.isEaten(), true);
   }
   
-  // test collision
-  boolean testCollision(Tester t) {
-    return t.checkExpect(this.player1.collision(this.botFish), this.player1);
+  // test isBigEnough method 
+  boolean testIsBigEnough(Tester t) {
+    return t.checkExpect(player1.isBigEnough(), false)
+        && t.checkExpect(player2.isBigEnough(), true);
+  }
+  
+  // test for checkDead
+  boolean testCheckDead(Tester t) {
+    return t.checkExpect(this.testEmptyBot.checkDead(player1, rand), 
+        this.testEmptyBot)
+        && t.checkExpect(this.testBot.checkDead(player1, rand), 
+            this.testBot)
+        && t.checkExpect(this.testBot.checkDead(player2, new Random(1)), 
+            new ConsLoBot(new BotFish(new Random(1)), testEmptyBot));
   }
 
   //method to test the update method for the ILoBot
@@ -527,12 +573,6 @@ class ExamplesFishy {
   boolean testRandomColor(Tester t) {
    return t.checkExpect(botFishL.randomColor(new Random(1)), Color.green)
        && t.checkExpect(botFishR.randomColor(new Random(2)), Color.gray);
-  }
-  
-  //test is Big Enough method 
-  boolean testIsBigEnough(Tester t) {
-   return t.checkExpect(player1.isBigEnough(), false)
-       && t.checkExpect(player2.isBigEnough(), true);
   }
   
   // method to testGenerateBots
