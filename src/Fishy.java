@@ -1,8 +1,6 @@
 import tester.Tester;
 import javalib.funworld.*;
 import javalib.worldimages.*;
-import sun.tools.tree.ThisExpression;
-
 import java.awt.Color;
 import java.util.Random;
 
@@ -70,7 +68,7 @@ class Fishy extends World {
       return new MtLoBot();
     }
 
-    return new ConsLoBot(new BotFish(this.rand), generateFish(n-1));
+    return new ConsLoBot(new BotFish(this.rand), generateFish(n - 1));
   }
 
   // draws the Fishy! game
@@ -314,11 +312,11 @@ class PlayerFish extends AFish {
     return this;
   }
   
-  public boolean isEaten() {//-----------------------------------------------------------------------------------------------------------
+  public boolean isEaten() {
     return this.fishUntilGrow < 0;
   }
   
-  public boolean isBigEnough() {//-----------------------------------------------------------------------------------------------------------
+  public boolean isBigEnough() {
     return this.size > 10;
   }
 
@@ -379,19 +377,15 @@ class BotFish extends AFish {
 
   public Color randomColor() { //-----------------------------------------------------------------------------------------------------------
     int rand = this.rand.nextInt(5);
-    if(rand == 0) { 
+    if (rand == 0) { 
       return Color.green; 
-    }
-    if(rand == 1) { 
+    } else if (rand == 1) { 
       return Color.yellow; 
-    }
-    if(rand == 2) { 
+    } else if (rand == 2) { 
       return Color.orange; 
-    }
-    if(rand == 3) { 
+    } else if (rand == 3) { 
       return Color.gray; 
-    }
-    if(rand == 4) { 
+    } else if (rand == 4) { 
       return Color.pink; 
     }
     return Color.black;
@@ -400,13 +394,17 @@ class BotFish extends AFish {
 
 // an interface to represent a list of BotFish
 interface ILoBot {
+  
   // Return a world image containing all the botFish
   WorldImage drawBots(WorldImage img);
 
+  // redraws each fish with a new position
   ILoBot update();
   
+  // checks if the player collides with any fish in the list
   PlayerFish checkCollisions(PlayerFish p);
   
+  // checks if the player ate any of the fish in the list
   ILoBot checkDead(PlayerFish p);
 
 }
@@ -439,7 +437,7 @@ class ConsLoBot implements ILoBot {
     return this.rest.checkCollisions(p.collision(this.first));
   }
   
-  public ILoBot checkDead(PlayerFish p) { //-----------------------------------------------------------------------------------------------------------
+  public ILoBot checkDead(PlayerFish p) { 
     if (p.willCollide(this.first) && p.canEat(this.first)) {
       return new ConsLoBot(new BotFish(new Random()), 
           this.rest.checkDead(p));
@@ -477,13 +475,36 @@ class ExamplesFishy {
 
   // example variables
   PlayerFish player1 = new PlayerFish();
+  PlayerFish player2 = new PlayerFish(0, 137, 11, -10, Color.red, true);
   Random rand = new Random(5);
   Fishy w = new Fishy(this.player1);
   Fishy testW = new Fishy(this.player1, rand);
+  ILoBot testEmptyBot = new MtLoBot();
+  BotFish botFish = new BotFish(rand);
+  ILoBot testBot = new ConsLoBot(botFish, testEmptyBot);
 
   // a class to test Fishy
   boolean testFishy(Tester t) {
     return w.bigBang(800, 600, .05);
+  }
+  
+  // test for checkDead
+  boolean testCheckDead(Tester t) {
+    return t.checkExpect(this.testEmptyBot.checkDead(player1), 
+        this.testEmptyBot)
+        && t.checkExpect(this.testBot.checkDead(player1), 
+            this.testBot);
+  }
+  
+  // test isEaten
+  boolean testEaten(Tester t) {
+    return t.checkExpect(this.player1.isEaten(), false)
+        && t.checkExpect(this.player2.isEaten(), true);
+  }
+  
+  // test collision
+  boolean testCollision(Tester t) {
+    return t.checkExpect(this.player1.collision(this.botFish), this.player1);
   }
   
   // method to testGenerateBots
