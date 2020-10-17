@@ -1,15 +1,8 @@
-
 import tester.Tester;
 import javalib.funworld.*;
 import javalib.worldimages.*;
 import java.awt.Color;
 import java.util.Random;
-
-/* 
- * Sizes range from 1 to 10 for bots
- *    Eat 3 fish to grow
- *    Player starts at 1 and can eat size 1
- */
 
 // contains the Fishy! game
 class Fishy extends World {
@@ -657,8 +650,8 @@ class ExamplesFishy {
             new Fishy(this.player1.moveFish(";~;"), testW.rand, testW.bots));
   }
   
-  // method to testGenerateBots
-  boolean testGenerateBots(Tester t) {
+  // method to testGenerateFish
+  boolean testGenerateFish(Tester t) {
     return t.checkExpect(testW.generateFish(0, new Random(5)), new MtLoBot())
         && t.checkExpect(testW.generateFish(1, new Random(5)), 
             new ConsLoBot(new BotFish(new Random(5)), new MtLoBot()));
@@ -675,7 +668,8 @@ class ExamplesFishy {
   // test worldEnds
   boolean testWorldEnds(Tester t) {
     return t.checkExpect(loseW.worldEnds(), new WorldEnd(true, loseW.lastScene("You Got Eaten!")))
-        && t.checkExpect(winW.worldEnds(), new WorldEnd(true, winW.lastScene("Congratulations, You Win!!!")))
+        && t.checkExpect(winW.worldEnds(), new WorldEnd(true, 
+            winW.lastScene("Congratulations, You Win!!!")))
         && t.checkExpect(continueW.worldEnds(), new WorldEnd(false, continueW.makeScene()));
   }
   
@@ -685,7 +679,7 @@ class ExamplesFishy {
         winW.makeScene().placeImageXY(new TextImage(":(", Color.red), 100,40))
         && t.checkExpect(winW.lastScene(":)"), 
             winW.makeScene().placeImageXY(new TextImage(":)", Color.red), 100,40));
-} 
+  } 
   
   
   // ~ tests for AFish class ~
@@ -802,10 +796,10 @@ class ExamplesFishy {
   // ~ tests for the BotFish class ~
   //method to test the update method for the BotFish
   boolean testUpdateBotFish(Tester t) {
-   return t.checkExpect(botFishR.update(), 
-       new BotFish(rand, 3, 100, true, 5, Color.yellow))
-       && t.checkExpect(botFishL.update(), 
-           new BotFish(rand, 795, 100, false, 1, Color.black));
+    return t.checkExpect(botFishR.update(), 
+        new BotFish(rand, 3, 100, true, 5, Color.yellow))
+        && t.checkExpect(botFishL.update(), 
+            new BotFish(rand, 795, 100, false, 1, Color.black));
   }
   
   //tests the random color method
@@ -827,8 +821,8 @@ class ExamplesFishy {
 
   //method to test the update method for the ILoBot
   boolean testUpdateILoBot(Tester t) {
-   return t.checkExpect(testEmptyBot.update(), testEmptyBot)
-       && t.checkExpect(testBot.update(), new ConsLoBot(botFishR.update(), testEmptyBot));
+    return t.checkExpect(testEmptyBot.update(), testEmptyBot)
+        && t.checkExpect(testBot.update(), new ConsLoBot(botFishR.update(), testEmptyBot));
   }
 
   // method to test the drawBots method
@@ -849,20 +843,3 @@ class ExamplesFishy {
   }
   
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
