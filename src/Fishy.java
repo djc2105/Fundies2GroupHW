@@ -638,7 +638,7 @@ class ExamplesFishy {
     return w.bigBang(800, 600, .05);
   }
   
-  // ~ test for Fishy class ~
+  // ~ tests for Fishy class ~
   // test onKeyEvent
   boolean testOnKeyEvent(Tester t) {
     return t.checkExpect(testW.onKeyEvent("left"), 
