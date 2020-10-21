@@ -1,8 +1,8 @@
 
 import tester.Tester;
-import java.util.Comparator;
 
-import com.sun.java.swing.plaf.windows.resources.windows;
+import java.awt.event.ItemEvent;
+import java.util.Comparator;
 
 
 // an abstract class to represent a binary tree
@@ -24,6 +24,9 @@ abstract class ABST<T> {
   
   // returns the leftmost item in the BST
   abstract T getLeftMost();
+  
+  //returns the most left item in this BST
+   abstract T getLeftMost(T item);
   
   // returns the BST without the leftmost item
   abstract ABST<T> getRight();
@@ -58,18 +61,21 @@ class Leaf<T> extends ABST<T> {
         new Leaf<T>(super.order));
   }
 
-  @Override
+  // Return false because nothing is present in a leaf
   boolean present(T item) {
-    // TODO Auto-generated method stub
     return false;
   }
 
-  @Override
+  // Returns an error
   T getLeftMost() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new RuntimeException("No leftmost item of an empty tree");
   }
 
+  // Returns the item because it is the most left
+  T getLeftMost(T item) {
+    return item;
+  }
+  
   @Override
   ABST<T> getRight() {
     // TODO Auto-generated method stub
@@ -131,16 +137,25 @@ class Node<T> extends ABST<T> {
     }
   }
 
-  @Override
+  // 
   boolean present(T item) {
-    // TODO Auto-generated method stub
-    return false;
+    if (super.order.compare(this.data, item) == 0) {
+      return true;
+    } else if (super.order.compare(this.data, item) > 0) {
+      return this.left.present(item);
+    } else {
+      return this.right.present(item);
+    }
   }
 
-  @Override
+  // Returns the most left item in this node
   T getLeftMost() {
-    // TODO Auto-generated method stub
-    return null;
+    return this.left.getLeftMost(this.data);
+  }
+  
+  // Returns the most left item in this node
+  T getLeftMost(T item) {
+    return this.left.getLeftMost(this.data);
   }
 
   @Override
@@ -204,7 +219,6 @@ class BooksByAuthor implements Comparator<Book> {
   
   // returns a posInt if the author of t1 comes after t2 alphabetically
   public int compare(Book t1, Book t2) {
-    System.out.println(t1.author +  " " + t2.author);
     return t1.author.compareTo(t2.author);
   }
   
@@ -228,6 +242,7 @@ class ExamplesABST {
   Book agnesGrey = new Book("Agnes Grey", "Anne Bronte", 4);
   Book prideAndPrejudice = new Book("Pride and Prejudice", "Jane Austen", 12);
   Book l984 = new Book("1984", "George Orwell", 10);
+  Book dune = new Book("Dune", "Frank Herbert", 9);
   
   // example function objects
   BooksByTitle bbt = new BooksByTitle();
@@ -307,7 +322,25 @@ class ExamplesABST {
             this.bbpLeaf));
   }
   
+  // A method to test the Present method
+  boolean testPresent(Tester t) {
+    return t.checkExpect(bbtTree.present(agnesGrey), true) 
+        && t.checkExpect(bbtTree.present(l984), false)
+        && t.checkExpect(bbaTree.present(agnesGrey), true)
+        && t.checkExpect(bbaTree.present(l984), false)
+        && t.checkExpect(bbpTree.present(agnesGrey), true)
+        && t.checkExpect(bbpTree.present(l984), true)
+        && t.checkExpect(bbpTree.present(dune), false);
+  }
   
+  // A method to test the getLeftMost method
+  boolean testGetLeftMost(Tester t) {
+    return t.checkExpect(bbtTree.getLeftMost(), agnesGrey)
+        && t.checkExpect(bbaTree.getLeftMost(), agnesGrey)
+        && t.checkExpect(bbpTree.getLeftMost(), agnesGrey)
+        && t.checkException(new RuntimeException("No leftmost item of an empty tree"), 
+            bbaLeaf, "getLeftMost");
+  }
 }
 
 
