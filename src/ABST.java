@@ -1,7 +1,5 @@
 
 import tester.Tester;
-
-import java.awt.event.ItemEvent;
 import java.util.Comparator;
 
 
@@ -76,15 +74,13 @@ class Leaf<T> extends ABST<T> {
     return item;
   }
   
-  @Override
+  // returns everything but the leftmost element of the leaf
   ABST<T> getRight() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new RuntimeException("No right of an empty tree");
   }
 
-  @Override
+  //checks if the tree is the same as the one given
   boolean sameTree(ABST<T> other) {
-    // TODO Auto-generated method stub
     return false;
   }
 
@@ -158,22 +154,24 @@ class Node<T> extends ABST<T> {
     return this.left.getLeftMost(this.data);
   }
 
-  @Override
+  // returns every element of the tree except for the leftmost item
   ABST<T> getRight() {
-    // TODO Auto-generated method stub
-    return null;
+    if (super.order.compare(this.data, this.getLeftMost()) == 0) {
+      return this.right;
+    } else {
+      return new Node<T>(this.order, this.data, this.left.getRight(), this.right);
+    }
   }
 
-  @Override
+  // checks if the tree is the same as the one given
   boolean sameTree(ABST<T> other) {
-    // TODO Auto-generated method stub
     return false;
   }
 
-  @Override
+  // checks if this tree holds all the same elements as the given tree
   boolean sameData(ABST<T> other) {
-    // TODO Auto-generated method stub
-    return false;
+    return (super.order.compare(this.getLeftMost(), other.getLeftMost()) == 0)
+        && (this.getRight().sameData(other));
   }
   
 }
@@ -341,6 +339,21 @@ class ExamplesABST {
         && t.checkException(new RuntimeException("No leftmost item of an empty tree"), 
             bbaLeaf, "getLeftMost");
   }
+  
+  // test for getRight
+  boolean testGetRight(Tester t) {
+    return t.checkExpect(this.bbtTree.getRight(), 
+        new Node<Book>(this.bbt, this.prideAndPrejudice, 
+            new Node<Book>(this.bbt, this.janeEyre, this.bbtLeaf, this.bbtLeaf), 
+            new Node<Book>(this.bbt, this.wutheringHeights, this.bbtLeaf, this.bbtLeaf)))
+        && t.checkExpect(this.bbaNode1.getRight(), this.bbaLeaf)
+        && t.checkExpect(this.bbpNode3.getRight(), 
+            new Node<Book>(this.bbp, this.janeEyre, this.bbpLeaf, 
+                new Node<Book>(this.bbp, this.wutheringHeights, this.bbpLeaf, this.bbpLeaf)))
+        && t.checkException(new RuntimeException("No right of an empty tree"), 
+            this.bbpLeaf, "getRight");
+  }
+  
 }
 
 
