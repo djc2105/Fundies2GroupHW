@@ -13,6 +13,24 @@ abstract class ABST<T> {
     this.order = order;
   }
   
+  // insert an item into the correct place in the BST
+  abstract ABST<T> insert(T item);
+  
+  // check if the given item is currently in the BST
+  abstract boolean present(T item);
+  
+  // returns the leftmost item in the BST
+  abstract T getLeftMost();
+  
+  // returns the BST without the leftmost item
+  abstract ABST<T> getRight();
+  
+  // checks if this BST is the same as the given BST
+  abstract boolean sameTree(ABST<T> other);
+  
+  // checks if this BST has the same data as the given BST
+  abstract boolean sameData(ABST<T> other);
+  
 }
 
 // an element of a binary tree with no data
@@ -30,6 +48,42 @@ class Leaf<T> extends ABST<T> {
    * methods for fields: 
    * 
    */
+  
+  @Override
+  ABST<T> insert(T item) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  boolean present(T item) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  T getLeftMost() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  ABST<T> getRight() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  boolean sameTree(ABST<T> other) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  boolean sameData(ABST<T> other) {
+    // TODO Auto-generated method stub
+    return false;
+  }
   
 }
 
@@ -59,6 +113,42 @@ class Node<T> extends ABST<T> {
    * methods for fields: 
    * 
    */
+
+  @Override
+  ABST<T> insert(T item) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  boolean present(T item) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  T getLeftMost() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  ABST<T> getRight() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  boolean sameTree(ABST<T> other) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  boolean sameData(ABST<T> other) {
+    // TODO Auto-generated method stub
+    return false;
+  }
   
 }
 
@@ -117,3 +207,67 @@ class BooksByPrice implements Comparator<Book> {
   }
   
 }
+
+class ExamplesABST {
+  
+  // example books
+  Book wutheringHeights = new Book("Wuthering Heights", "Emily Bronte", 10);
+  Book janeEyre = new Book("Jane Eyre", "Charlotte Bronte", 5);
+  Book agnesGrey = new Book("Agnes Grey", "Anne Bronte", 4);
+  Book prideAndPrejudice = new Book("Pride and Prejudice", "Jane Austen", 12);
+  
+  // example function objects
+  BooksByTitle bbt = new BooksByTitle();
+  BooksByAuthor bba = new BooksByAuthor();
+  BooksByPrice bbp = new BooksByPrice();
+  
+  // valid BST sorting books by Title
+  ABST<Book> bbtLeaf = new Leaf<Book>(bbt);
+  ABST<Book> bbtNode1 = new Node<Book>(bbt, this.agnesGrey, this.bbtLeaf, this.bbtLeaf);
+  ABST<Book> bbtNode2 = new Node<Book>(bbt, this.janeEyre, this.bbtNode1, this.bbtLeaf);
+  ABST<Book> bbtNode3 = new Node<Book>(bbt, this.wutheringHeights, this.bbtLeaf, this.bbtLeaf);
+  ABST<Book> bbtTree = new Node<Book>(bbt, this.prideAndPrejudice, this.bbtNode2, this.bbtNode3);
+  
+  // valid BST sorting books by Author
+  ABST<Book> bbaLeaf = new Leaf<Book>(bba);
+  ABST<Book> bbaNode1 = new Node<Book>(bba, this.agnesGrey, this.bbaLeaf, this.bbaLeaf);
+  ABST<Book> bbaNode2 = new Node<Book>(bba, this.wutheringHeights, this.bbaLeaf, this.bbaLeaf);
+  ABST<Book> bbaNode3 = new Node<Book>(bba, this.prideAndPrejudice, this.bbaNode2, this.bbaLeaf);
+  ABST<Book> bbaTree = new Node<Book>(bba, this.janeEyre, this.bbaNode1, this.bbaNode3);
+  
+  // valid BST sorting books by Price
+  ABST<Book> bbpLeaf = new Leaf<Book>(bbp);
+  ABST<Book> bbpNode1 = new Node<Book>(bbp, this.agnesGrey, this.bbpLeaf, this.bbpLeaf);
+  ABST<Book> bbpNode2 = new Node<Book>(bbp, this.wutheringHeights, this.bbpLeaf, this.bbpLeaf);
+  ABST<Book> bbpNode3 = new Node<Book>(bbp, this.janeEyre, this.bbpNode1, this.bbpNode2);
+  ABST<Book> bbpTree = new Node<Book>(bbp, this.prideAndPrejudice, this.bbpNode3, this.bbpLeaf);
+  
+  
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
