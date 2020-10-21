@@ -2,6 +2,9 @@
 import tester.Tester;
 import java.util.Comparator;
 
+import com.sun.java.swing.plaf.windows.resources.windows;
+
+
 // an abstract class to represent a binary tree
 abstract class ABST<T> {
   
@@ -49,10 +52,10 @@ class Leaf<T> extends ABST<T> {
    * 
    */
   
-  @Override
   ABST<T> insert(T item) {
-    // TODO Auto-generated method stub
-    return null;
+    return new Node<T>(super.order, item, 
+        new Leaf<T>(super.order), 
+        new Leaf<T>(super.order));
   }
 
   @Override
@@ -114,10 +117,18 @@ class Node<T> extends ABST<T> {
    * 
    */
 
-  @Override
+  // Inserts item into its comparative position and returns the new ABST<T>
   ABST<T> insert(T item) {
-    // TODO Auto-generated method stub
-    return null;
+    if(super.order.compare(item, this.data) < 0) {
+      return new Node<T>(super.order, this.data, this.left.insert(item), this.right);
+    } else if (super.order.compare(item, this.data) > 0) {
+      return new Node<T>(super.order, this.data, this.left, this.right.insert(item));
+    } else {
+      return new Node<T>(super.order, this.data, this.left, 
+          new Node<T>(super.order, item, 
+              new Leaf<T>(super.order), 
+              this.right));
+    }
   }
 
   @Override
@@ -193,6 +204,7 @@ class BooksByAuthor implements Comparator<Book> {
   
   // returns a posInt if the author of t1 comes after t2 alphabetically
   public int compare(Book t1, Book t2) {
+    System.out.println(t1.author +  " " + t2.author);
     return t1.author.compareTo(t2.author);
   }
   
@@ -215,6 +227,7 @@ class ExamplesABST {
   Book janeEyre = new Book("Jane Eyre", "Charlotte Bronte", 5);
   Book agnesGrey = new Book("Agnes Grey", "Anne Bronte", 4);
   Book prideAndPrejudice = new Book("Pride and Prejudice", "Jane Austen", 12);
+  Book l984 = new Book("1984", "George Orwell", 10);
   
   // example function objects
   BooksByTitle bbt = new BooksByTitle();
@@ -242,6 +255,57 @@ class ExamplesABST {
   ABST<Book> bbpNode3 = new Node<Book>(bbp, this.janeEyre, this.bbpNode1, this.bbpNode2);
   ABST<Book> bbpTree = new Node<Book>(bbp, this.prideAndPrejudice, this.bbpNode3, this.bbpLeaf);
   
+  // A method to test the Insert Method
+  boolean testInsert(Tester t) {
+    return t.checkExpect(bbtTree.insert(l984), new Node<Book>(bbt, 
+        prideAndPrejudice, 
+        new Node<Book>(bbt, 
+            janeEyre, 
+            new Node<Book>(bbt, 
+                agnesGrey, 
+                new Node<Book>(bbt, 
+                    l984, 
+                    this.bbtLeaf, 
+                    this.bbtLeaf), 
+                this.bbtLeaf), 
+            this.bbtLeaf), 
+        new Node<Book>(bbt, 
+            wutheringHeights, 
+            this.bbtLeaf,
+            this.bbtLeaf)))
+        && t.checkExpect(bbaTree.insert(l984), new Node<Book>(bba, 
+            janeEyre, 
+            new Node<Book>(bba, 
+                agnesGrey, 
+                this.bbaLeaf, 
+                this.bbaLeaf), 
+            new Node<Book>(bba, 
+                prideAndPrejudice, 
+                new Node<Book>(bba, 
+                    wutheringHeights, 
+                    this.bbaLeaf, 
+                    new Node<Book>(bba, 
+                        l984, 
+                        this.bbaLeaf, 
+                        this.bbaLeaf)),
+                this.bbaLeaf)))
+        && t.checkExpect(bbpTree.insert(l984), new Node<Book>(bbp, 
+            prideAndPrejudice, 
+            new Node<Book>(bbp, 
+                janeEyre, 
+                new Node<Book>(bbp, 
+                    agnesGrey, 
+                    this.bbpLeaf, 
+                    this.bbpLeaf), 
+                new Node<Book>(bbp, 
+                    wutheringHeights, 
+                    this.bbpLeaf, 
+                    new Node<Book>(bbp, 
+                        l984, 
+                        this.bbpLeaf, 
+                        this.bbpLeaf))), 
+            this.bbpLeaf));
+  }
   
   
 }
