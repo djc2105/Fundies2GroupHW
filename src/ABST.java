@@ -2,6 +2,26 @@
 import tester.Tester;
 import java.util.Comparator;
 
+// an interface to represent a generic list
+interface IList<T> {}
+
+// a class to represent an empty element in a generic list
+class MtList<T> implements IList<T> {}
+
+// a class to represent a non-empty generic list
+class ConsList<T> implements IList<T> {
+  
+  // variables
+  T first;
+  IList<T> rest;
+  
+  // constructor
+  ConsList (T first, IList<T> rest) {
+    this.first = first;
+    this.rest = rest;
+  }
+  
+}
 
 // an abstract class to represent a binary tree
 abstract class ABST<T> {
@@ -35,6 +55,9 @@ abstract class ABST<T> {
   // checks if this BST has the same data as the given BST
   abstract boolean sameData(ABST<T> other);
   
+  //creates a list in the same order as this tree
+  abstract IList<T> buildList();
+  
 }
 
 // an element of a binary tree with no data
@@ -48,9 +71,16 @@ class Leaf<T> extends ABST<T> {
   /* fields: 
    *   super.order ... Comparator<T>
    * methods: 
-   *   
+   *   this.insert(T) ... ABST<T>
+   *   this.present(T) ... boolean
+   *   this.getLeftMost() ... T
+   *   this.getLeftMost(T) ... T
+   *   this.getRight() ...  ABST<T>
+   *   this.sameTree(ABST<T>) ... boolean
+   *   this.sameData(ABST<T>) ... boolean
+   *   this.buildList() ... IList<T>
    * methods for fields: 
-   * 
+   *   super.order.compare(T, T) ... int
    */
   
   ABST<T> insert(T item) {
@@ -79,15 +109,21 @@ class Leaf<T> extends ABST<T> {
     throw new RuntimeException("No right of an empty tree");
   }
 
-  //checks if the tree is the same as the one given
+  //checks if the leaf is the same as the one given
   boolean sameTree(ABST<T> other) {
+    // see the Leaf<T> and Node<T> classes for the possible templates of ABST<T>
     return false;
   }
 
-  @Override
+  // checks if the data in the given tree is the same as in this leaf
   boolean sameData(ABST<T> other) {
-    // TODO Auto-generated method stub
+    // see the Leaf<T> and Node<T> classes for the possible templates of ABST<T>
     return false;
+  }
+  
+  // creates a list in the same order as this leaf
+  IList<T> buildList() {
+    return new MtList<T>();
   }
   
 }
@@ -114,9 +150,32 @@ class Node<T> extends ABST<T> {
    *   this.left ... ABST<T>
    *   this.right ... ABST<T>
    * methods: 
-   *   
+   *   this.insert(T) ... ABST<T>
+   *   this.present(T) ... boolean
+   *   this.getLeftMost() ... T
+   *   this.getLeftMost(T) ... T
+   *   this.getRight() ...  ABST<T>
+   *   this.sameTree(ABST<T>) ... boolean
+   *   this.sameData(ABST<T>) ... boolean
+   *   this.buildList() ... IList<T>
    * methods for fields: 
-   * 
+   *   super.order.compare(T, T) ... int
+   *   this.left.insert(T) ... ABST<T>
+   *   this.left.present(T) ... boolean
+   *   this.left.getLeftMost() ... T
+   *   this.left.getLeftMost(T) ... T
+   *   this.left.getRight() ...  ABST<T>
+   *   this.left.sameTree(ABST<T>) ... boolean
+   *   this.left.sameData(ABST<T>) ... boolean
+   *   this.left.buildList() ... IList<T>
+   *   this.right.insert(T) ... ABST<T>
+   *   this.right.present(T) ... boolean
+   *   this.right.getLeftMost() ... T
+   *   this.right.getLeftMost(T) ... T
+   *   this.right.getRight() ...  ABST<T>
+   *   this.right.sameTree(ABST<T>) ... boolean
+   *   this.right.sameData(ABST<T>) ... boolean
+   *   this.right.buildList() ... IList<T>
    */
 
   // Inserts item into its comparative position and returns the new ABST<T>
@@ -163,17 +222,25 @@ class Node<T> extends ABST<T> {
     }
   }
 
-  // checks if the tree is the same as the one given
+  // checks if this tree is the same as the one given
   boolean sameTree(ABST<T> other) {
+    // see the Leaf<T> and Node<T> classes for the possible templates of ABST<T>
     return false;
   }
 
   // checks if this tree holds all the same elements as the given tree
   boolean sameData(ABST<T> other) {
+    // see the Leaf<T> and Node<T> classes for the possible templates of ABST<T>
     return (super.order.compare(this.getLeftMost(), other.getLeftMost()) == 0)
-        && (this.getRight().sameData(other));
+        && (this.getRight().sameData(other)); // FIX THIS!!!!!!! IT WILL ERROR OUT
   }
   
+  // creates a list in the same order as this non-empty tree
+  IList<T> buildList() {
+    return new ConsList<T>(this.getLeftMost(), 
+        this.getRight().buildList());
+  }
+
 }
 
 class Book {
@@ -207,6 +274,7 @@ class BooksByTitle implements Comparator<Book> {
   
   // returns a posInt if the title of t1 comes after t2 alphabetically
   public int compare(Book t1, Book t2) {
+    // see the Book class for the template for t1 and t2
     return t1.title.compareTo(t2.title);
   }
   
@@ -217,6 +285,7 @@ class BooksByAuthor implements Comparator<Book> {
   
   // returns a posInt if the author of t1 comes after t2 alphabetically
   public int compare(Book t1, Book t2) {
+    // see the Book class for the template for t1 and t2
     return t1.author.compareTo(t2.author);
   }
   
@@ -227,6 +296,7 @@ class BooksByPrice implements Comparator<Book> {
   
   // returns a posInt if the price of t1 is greater than that of t2
   public int compare(Book t1, Book t2) {
+    // see the Book class for the template for t1 and t2
     return t1.price - t2.price;
   }
   
@@ -268,6 +338,19 @@ class ExamplesABST {
   ABST<Book> bbpNode3 = new Node<Book>(bbp, this.janeEyre, this.bbpNode1, this.bbpNode2);
   ABST<Book> bbpTree = new Node<Book>(bbp, this.prideAndPrejudice, this.bbpNode3, this.bbpLeaf);
   
+  // list of books in title order
+  IList<Book> mtBook = new MtList<Book>();
+  IList<Book> consBook1 = new ConsList<Book>(this.wutheringHeights, this.mtBook);
+  IList<Book> consBook2 = new ConsList<Book>(this.prideAndPrejudice, this.consBook1);
+  IList<Book> consBook3 = new ConsList<Book>(this.janeEyre, this.consBook2);
+  IList<Book> consBook4 = new ConsList<Book>(this.agnesGrey, this.consBook3);
+  
+  // list of books in author & price order
+  IList<Book> consBook5 = new ConsList<Book>(this.prideAndPrejudice, this.mtBook);
+  IList<Book> consBook6 = new ConsList<Book>(this.wutheringHeights, this.consBook5);
+  IList<Book> consBook7 = new ConsList<Book>(this.janeEyre, this.consBook6);
+  IList<Book> consBook8 = new ConsList<Book>(this.agnesGrey, this.consBook7);
+
   // A method to test the Insert Method
   boolean testInsert(Tester t) {
     return t.checkExpect(bbtTree.insert(l984), new Node<Book>(bbt, 
@@ -352,6 +435,36 @@ class ExamplesABST {
                 new Node<Book>(this.bbp, this.wutheringHeights, this.bbpLeaf, this.bbpLeaf)))
         && t.checkException(new RuntimeException("No right of an empty tree"), 
             this.bbpLeaf, "getRight");
+  }
+  
+  // test for sameTree
+  boolean testSameTree(Tester t) {
+    return t.checkExpect(this.bbtTree.sameTree(this.bbtTree), true)
+        && t.checkExpect(this.bbaTree.sameTree(this.bbaNode3), false)
+        && t.checkExpect(this.bbpLeaf.sameTree(this.bbpLeaf), true)
+        && t.checkExpect(this.bbaLeaf.sameTree(this.bbaTree), false)
+        && t.checkExpect(this.bbtTree.sameTree(this.bbpLeaf), false)
+        && t.checkExpect(this.bbaLeaf.sameTree(this.bbpLeaf), true)
+        && t.checkExpect(this.bbpTree.sameTree(this.bbtTree), false);
+  }
+  
+  // test for sameData
+  boolean testSameData(Tester t) {
+    return t.checkExpect(this.bbtTree.sameData(this.bbtTree), true)
+        && t.checkExpect(this.bbaTree.sameData(this.bbaNode3), false)
+        && t.checkExpect(this.bbpLeaf.sameData(this.bbpLeaf), true)
+        && t.checkExpect(this.bbaLeaf.sameData(this.bbaTree), false)
+        && t.checkExpect(this.bbtTree.sameData(this.bbpLeaf), false)
+        && t.checkExpect(this.bbaLeaf.sameData(this.bbpLeaf), true)
+        && t.checkExpect(this.bbpTree.sameData(this.bbtTree), true)
+        && t.checkExpect(this.bbpNode1.sameData(this.bbtNode1), true);
+  }
+  
+  // test for buildList
+  boolean testBuildList(Tester t) {
+    return t.checkExpect(this.bbtTree.buildList(), this.consBook4)
+        && t.checkExpect(this.bbaTree.buildList(), this.consBook8)
+        && t.checkExpect(this.bbpLeaf.buildList(), this.mtBook);
   }
   
 }
