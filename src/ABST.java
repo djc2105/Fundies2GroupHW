@@ -92,6 +92,7 @@ class Leaf<T> extends ABST<T> {
    *   super.order.compare(T, T) ... int
    */
   
+  //////////////////////////////////////////////////////////////////////////////////////////////
   ABST<T> insert(T item) {
     return new Node<T>(super.order, item, 
         new Leaf<T>(super.order), 
@@ -214,7 +215,7 @@ class Node<T> extends ABST<T> {
     }
   }
 
-  // 
+  // ////////////////////////////////////////////////////////////////////////////////////////////////////
   boolean present(T item) {
     if (super.order.compare(this.data, item) == 0) {
       return true;
