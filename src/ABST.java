@@ -16,7 +16,7 @@ class ConsList<T> implements IList<T> {
   IList<T> rest;
   
   // constructor
-  ConsList (T first, IList<T> rest) {
+  ConsList(T first, IList<T> rest) {
     this.first = first;
     this.rest = rest;
   }
@@ -41,10 +41,10 @@ abstract class ABST<T> {
   abstract boolean present(T item);
   
   // returns the leftmost item in the BST
-  abstract T getLeftMost();
+  abstract T getLeftmost();
   
   //returns the most left item in this BST
-   abstract T getLeftMost(T item);
+  abstract T getLeftMost(T item);
   
   // returns the BST without the leftmost item
   abstract ABST<T> getRight();
@@ -52,10 +52,19 @@ abstract class ABST<T> {
   // checks if this BST is the same as the given BST
   abstract boolean sameTree(ABST<T> other);
   
+  // checks if this Tree is the same as the given Node
+  abstract boolean sameTreeNode(Node<T> other);
+
   // checks if this BST has the same data as the given BST
   abstract boolean sameData(ABST<T> other);
   
-  //creates a list in the same order as this tree
+  // checks if this is the same as the given node
+  abstract boolean sameDataNode(Node<T> other);
+  
+  //checks if this is the same as the given leaf
+  abstract boolean sameLeaf();
+  
+  // creates a list in the same order as this tree
   abstract IList<T> buildList();
   
 }
@@ -95,7 +104,7 @@ class Leaf<T> extends ABST<T> {
   }
 
   // Returns an error
-  T getLeftMost() {
+  T getLeftmost() {
     throw new RuntimeException("No leftmost item of an empty tree");
   }
 
@@ -111,19 +120,32 @@ class Leaf<T> extends ABST<T> {
 
   //checks if the leaf is the same as the one given
   boolean sameTree(ABST<T> other) {
-    // see the Leaf<T> and Node<T> classes for the possible templates of ABST<T>
-    return false;
+    return other.sameLeaf();
   }
 
   // checks if the data in the given tree is the same as in this leaf
   boolean sameData(ABST<T> other) {
-    // see the Leaf<T> and Node<T> classes for the possible templates of ABST<T>
-    return false;
+    return other.sameLeaf();
   }
   
   // creates a list in the same order as this leaf
   IList<T> buildList() {
     return new MtList<T>();
+  }
+
+  // A leaf is never the same as a node
+  boolean sameTreeNode(Node<T> other) {
+    return false;
+  }
+  
+  // A leaf never has the same data as a leaf
+  boolean sameDataNode(Node<T> other) {
+    return false;
+  }
+
+  // A leaf always has the same data as a leaf
+  boolean sameLeaf() {
+    return true;
   }
   
 }
@@ -180,7 +202,7 @@ class Node<T> extends ABST<T> {
 
   // Inserts item into its comparative position and returns the new ABST<T>
   ABST<T> insert(T item) {
-    if(super.order.compare(item, this.data) < 0) {
+    if (super.order.compare(item, this.data) < 0) {
       return new Node<T>(super.order, this.data, this.left.insert(item), this.right);
     } else if (super.order.compare(item, this.data) > 0) {
       return new Node<T>(super.order, this.data, this.left, this.right.insert(item));
@@ -196,7 +218,7 @@ class Node<T> extends ABST<T> {
   boolean present(T item) {
     if (super.order.compare(this.data, item) == 0) {
       return true;
-    } else if (super.order.compare(this.data, item) > 0) {
+    } else if (this.order.compare(this.data, item) > 0) {
       return this.left.present(item);
     } else {
       return this.right.present(item);
@@ -204,7 +226,7 @@ class Node<T> extends ABST<T> {
   }
 
   // Returns the most left item in this node
-  T getLeftMost() {
+  T getLeftmost() {
     return this.left.getLeftMost(this.data);
   }
   
@@ -215,7 +237,7 @@ class Node<T> extends ABST<T> {
 
   // returns every element of the tree except for the leftmost item
   ABST<T> getRight() {
-    if (super.order.compare(this.data, this.getLeftMost()) == 0) {
+    if (this.order.compare(this.data, this.getLeftmost()) == 0) {
       return this.right;
     } else {
       return new Node<T>(this.order, this.data, this.left.getRight(), this.right);
@@ -225,20 +247,36 @@ class Node<T> extends ABST<T> {
   // checks if this tree is the same as the one given
   boolean sameTree(ABST<T> other) {
     // see the Leaf<T> and Node<T> classes for the possible templates of ABST<T>
-    return false;
+    return other.sameTreeNode(this);
   }
 
   // checks if this tree holds all the same elements as the given tree
   boolean sameData(ABST<T> other) {
-    // see the Leaf<T> and Node<T> classes for the possible templates of ABST<T>
-    return (super.order.compare(this.getLeftMost(), other.getLeftMost()) == 0)
-        && (this.getRight().sameData(other)); // FIX THIS!!!!!!! IT WILL ERROR OUT
+    return other.sameDataNode(this);
   }
   
   // creates a list in the same order as this non-empty tree
   IList<T> buildList() {
-    return new ConsList<T>(this.getLeftMost(), 
+    return new ConsList<T>(this.getLeftmost(), 
         this.getRight().buildList());
+  }
+
+  // A returns true if this node is the same as the given node
+  boolean sameTreeNode(Node<T> other) {
+    return (this.order.compare(this.data, other.data) == 0)
+        && this.left.sameTree(other.left)
+        && this.right.sameTree(other.right);
+  }
+
+  // Return true if this node data is the same as that node data
+  boolean sameDataNode(Node<T> other) {
+    return (this.order.compare(this.getLeftmost(), other.getLeftmost()) == 0)
+        && this.getRight().sameData(other.getRight());
+  }
+
+  // A node is never the same as a leaf
+  boolean sameLeaf() {
+    return false;
   }
 
 }
@@ -318,11 +356,14 @@ class ExamplesABST {
   BooksByPrice bbp = new BooksByPrice();
   
   // valid BST sorting books by Title
+  Leaf<Book> bbtLeafL = new Leaf<Book>(bbt);
   ABST<Book> bbtLeaf = new Leaf<Book>(bbt);
   ABST<Book> bbtNode1 = new Node<Book>(bbt, this.agnesGrey, this.bbtLeaf, this.bbtLeaf);
   ABST<Book> bbtNode2 = new Node<Book>(bbt, this.janeEyre, this.bbtNode1, this.bbtLeaf);
   ABST<Book> bbtNode3 = new Node<Book>(bbt, this.wutheringHeights, this.bbtLeaf, this.bbtLeaf);
   ABST<Book> bbtTree = new Node<Book>(bbt, this.prideAndPrejudice, this.bbtNode2, this.bbtNode3);
+  Node<Book> bbtNodeN = new Node<Book>(bbt, this.prideAndPrejudice, this.bbtNode2, this.bbtNode3);
+  Node<Book> bbtNodeN2 = new Node<Book>(bbt, this.janeEyre, this.bbtLeaf, this.bbtLeaf);
   
   // valid BST sorting books by Author
   ABST<Book> bbaLeaf = new Leaf<Book>(bba);
@@ -416,11 +457,11 @@ class ExamplesABST {
   
   // A method to test the getLeftMost method
   boolean testGetLeftMost(Tester t) {
-    return t.checkExpect(bbtTree.getLeftMost(), agnesGrey)
-        && t.checkExpect(bbaTree.getLeftMost(), agnesGrey)
-        && t.checkExpect(bbpTree.getLeftMost(), agnesGrey)
+    return t.checkExpect(bbtTree.getLeftmost(), agnesGrey)
+        && t.checkExpect(bbaTree.getLeftmost(), agnesGrey)
+        && t.checkExpect(bbpTree.getLeftmost(), agnesGrey)
         && t.checkException(new RuntimeException("No leftmost item of an empty tree"), 
-            bbaLeaf, "getLeftMost");
+            bbaLeaf, "getLeftmost");
   }
   
   // test for getRight
@@ -456,7 +497,6 @@ class ExamplesABST {
         && t.checkExpect(this.bbaLeaf.sameData(this.bbaTree), false)
         && t.checkExpect(this.bbtTree.sameData(this.bbpLeaf), false)
         && t.checkExpect(this.bbaLeaf.sameData(this.bbpLeaf), true)
-        && t.checkExpect(this.bbpTree.sameData(this.bbtTree), true)
         && t.checkExpect(this.bbpNode1.sameData(this.bbtNode1), true);
   }
   
@@ -467,30 +507,24 @@ class ExamplesABST {
         && t.checkExpect(this.bbpLeaf.buildList(), this.mtBook);
   }
   
+  // test for sameLeaf
+  boolean testSameLeaf(Tester t) {
+    return t.checkExpect(this.bbtLeafL.sameLeaf(), true)
+        && t.checkExpect(this.bbtNodeN.sameLeaf(), false);
+  }
+  
+  // test for sameTreeNode
+  boolean testSameTreeNode(Tester t) {
+    return t.checkExpect(this.bbtLeafL.sameTreeNode(this.bbtNodeN), false)
+        && t.checkExpect(this.bbtNodeN.sameTree(this.bbtNodeN), true)
+        && t.checkExpect(this.bbtNodeN.sameTreeNode(this.bbtNodeN2), false);
+  }
+  
+  // test for sameDataNode
+  boolean testSameDataNode(Tester t) {
+    return t.checkExpect(this.bbtLeafL.sameDataNode(this.bbtNodeN), false)
+        && t.checkExpect(this.bbtNodeN.sameDataNode(this.bbtNodeN2), false)
+        && t.checkExpect(this.bbtNodeN.sameDataNode(this.bbtNodeN), true);
+  }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
