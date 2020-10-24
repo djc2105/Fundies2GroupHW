@@ -78,7 +78,7 @@ class Leaf<T> extends ABST<T> {
   }
   
   /* fields: 
-   *   super.order ... Comparator<T>
+   *   this.order ... Comparator<T>
    * methods: 
    *   this.insert(T) ... ABST<T>
    *   this.present(T) ... boolean
@@ -88,15 +88,18 @@ class Leaf<T> extends ABST<T> {
    *   this.sameTree(ABST<T>) ... boolean
    *   this.sameData(ABST<T>) ... boolean
    *   this.buildList() ... IList<T>
+   *   this.sameTreeNode(Node<T>) ... boolean
+   *   this.sameDataNode(Node<T>) ... boolean
+   *   this.sameLeaf() ... boolean
    * methods for fields: 
-   *   super.order.compare(T, T) ... int
+   *   this.order.compare(T, T) ... int
    */
   
-  //////////////////////////////////////////////////////////////////////////////////////////////
+  // inserts the given item into the leaf
   ABST<T> insert(T item) {
-    return new Node<T>(super.order, item, 
-        new Leaf<T>(super.order), 
-        new Leaf<T>(super.order));
+    return new Node<T>(this.order, item, 
+        new Leaf<T>(this.order), 
+        new Leaf<T>(this.order));
   }
 
   // Return false because nothing is present in a leaf
@@ -168,7 +171,7 @@ class Node<T> extends ABST<T> {
   }
   
   /* fields: 
-   *   super.order ... Comparator<T>
+   *   this.order ... Comparator<T>
    *   this.data ... T
    *   this.left ... ABST<T>
    *   this.right ... ABST<T>
@@ -181,8 +184,11 @@ class Node<T> extends ABST<T> {
    *   this.sameTree(ABST<T>) ... boolean
    *   this.sameData(ABST<T>) ... boolean
    *   this.buildList() ... IList<T>
+   *   this.sameTreeNode(Node<T>) ... boolean
+   *   this.sameDataNode(Node<T>) ... boolean
+   *   this.sameLeaf() ... boolean
    * methods for fields: 
-   *   super.order.compare(T, T) ... int
+   *   this.order.compare(T, T) ... int
    *   this.left.insert(T) ... ABST<T>
    *   this.left.present(T) ... boolean
    *   this.left.getLeftMost() ... T
@@ -191,6 +197,9 @@ class Node<T> extends ABST<T> {
    *   this.left.sameTree(ABST<T>) ... boolean
    *   this.left.sameData(ABST<T>) ... boolean
    *   this.left.buildList() ... IList<T>
+   *   this.left.sameTreeNode(Node<T>) ... boolean
+   *   this.left.sameDataNode(Node<T>) ... boolean
+   *   this.left.sameLeaf() ... boolean
    *   this.right.insert(T) ... ABST<T>
    *   this.right.present(T) ... boolean
    *   this.right.getLeftMost() ... T
@@ -199,25 +208,28 @@ class Node<T> extends ABST<T> {
    *   this.right.sameTree(ABST<T>) ... boolean
    *   this.right.sameData(ABST<T>) ... boolean
    *   this.right.buildList() ... IList<T>
+   *   this.right.sameTreeNode(Node<T>) ... boolean
+   *   this.right.sameDataNode(Node<T>) ... boolean
+   *   this.right.sameLeaf() ... boolean
    */
 
   // Inserts item into its comparative position and returns the new ABST<T>
   ABST<T> insert(T item) {
-    if (super.order.compare(item, this.data) < 0) {
-      return new Node<T>(super.order, this.data, this.left.insert(item), this.right);
-    } else if (super.order.compare(item, this.data) > 0) {
-      return new Node<T>(super.order, this.data, this.left, this.right.insert(item));
+    if (this.order.compare(item, this.data) < 0) {
+      return new Node<T>(this.order, this.data, this.left.insert(item), this.right);
+    } else if (this.order.compare(item, this.data) > 0) {
+      return new Node<T>(this.order, this.data, this.left, this.right.insert(item));
     } else {
-      return new Node<T>(super.order, this.data, this.left, 
-          new Node<T>(super.order, item, 
-              new Leaf<T>(super.order), 
+      return new Node<T>(this.order, this.data, this.left, 
+          new Node<T>(this.order, item, 
+              new Leaf<T>(this.order), 
               this.right));
     }
   }
 
-  // ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // checks if a given item is present within this node
   boolean present(T item) {
-    if (super.order.compare(this.data, item) == 0) {
+    if (this.order.compare(this.data, item) == 0) {
       return true;
     } else if (this.order.compare(this.data, item) > 0) {
       return this.left.present(item);
@@ -282,6 +294,7 @@ class Node<T> extends ABST<T> {
 
 }
 
+// a class to represent a book
 class Book {
   
   // variables
