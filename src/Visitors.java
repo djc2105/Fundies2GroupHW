@@ -202,6 +202,105 @@ class EvalVisitor implements IArithVisitor<Double> {
   
 }
 
+// displays an IArith as a string
+class PrintVisitor implements IArithVisitor<String> {
+
+  // prints the constant
+  public String visitConst(Const c) {
+    return Double.toString(c.num);
+  }
+
+  // prints the unary formula
+  public String visitUnaryFormula(UnaryFormula uf) {
+    return "(" + uf.name + " " + uf.child.accept(this) + ")";
+  }
+
+  // prints the binary formula
+  public String visitBinaryFormula(BinaryFormula bf) {
+    return "(" + bf.name + " " + bf.left.accept(this) + ", "
+        + bf.right.accept(this) + ")";
+  }
+  
+}
+
+// returns a new IArith with doubled constants
+class DoublerVisitor implements IArithVisitor<IArith> {
+
+  // doubles the constant
+  public IArith visitConst(Const c) {
+    return new Const(c.num * 2);
+  }
+
+  // doubles any constants in the unary formula
+  public IArith visitUnaryFormula(UnaryFormula uf) {
+    return new UnaryFormula(uf.func, uf.name, uf.child.accept(this));
+  }
+
+  // doubles any constants in the binary formula
+  public IArith visitBinaryFormula(BinaryFormula bf) {
+    return new BinaryFormula(bf.func, bf.name, 
+        bf.left.accept(this), bf.right.accept(this));
+  }
+  
+}
+
+// returns true if there are no negative values
+class NoNegativeResults implements IArithVisitor<Boolean> {
+
+  // checks if the constant is negative
+  public Boolean visitConst(Const c) {
+    return c.num >= 0;
+  }
+
+  // checks if the number is negated
+  public Boolean visitUnaryFormula(UnaryFormula uf) {
+    return uf.name.equals("neg")
+        && uf.child.accept(this);
+  }
+
+  // checks if subtraction results in a negative
+  public Boolean visitBinaryFormula(BinaryFormula bf) {
+    IArithVisitor<Double> eval = new EvalVisitor();
+    return bf.name.equals("sub")
+        && bf.left.accept(eval) < bf.right.accept(eval)
+        && bf.left.accept(this)
+        && bf.right.accept(this);
+  }
+  
+}
+
+class ExamplesVisitors {
+  
+  Function<Double, Double> eNeg = new Neg();
+  Function<Double, Double> eSqr = new Sqr();
+  
+  BiFunction<Double, Double, Double> ePlus = new Plus();
+  BiFunction<Double, Double, Double> eMinus = new Minus();
+  BiFunction<Double, Double, Double> eMul = new Mul();
+  BiFunction<Double, Double, Double> eDiv = new Div();
+  
+  IArithVisitor<Double> ev = new EvalVisitor();
+  IArithVisitor<String> pv = new PrintVisitor();
+  IArithVisitor<IArith> dv = new DoublerVisitor();
+  IArithVisitor<Boolean> nnr = new NoNegativeResults();
+  
+  IArith c1 = new Const(5.0);
+  IArith c2 = new Const(0.0);
+  IArith c3 = new Const(-5.0);
+  IArith c4 = new Const(25.0);
+  IArith c5 = new Const(10.0);
+  
+  IArith u1 = new UnaryFormula(eNeg, "neg", c1);
+  IArith u2 = new UnaryFormula(eNeg, "neg", c2);
+  IArith u3 = new UnaryFormula(eNeg, "neg", u1);
+  IArith u4 = new UnaryFormula(eSqr, "sqr", c1);
+  IArith u5 = new UnaryFormula(eSqr, "sqr", c2);
+  IArith u6 = new UnaryFormula(eSqr, "sqr", c3);
+  
+  IArith b1 = new BinaryFormula(ePlus, "plus", c1, c1);
+  
+}
+
 
 
 
