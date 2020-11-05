@@ -31,7 +31,11 @@ class PermutationCode {
   // Initialize the encoding permutation of the characters
   ArrayList<Character> initEncoder() {
     ArrayList<Character> resultCode = new ArrayList<Character>(26);
-    ArrayList<Character> alphabetToChange = this.alphabet;
+    ArrayList<Character> alphabetToChange = 
+        new ArrayList<Character>(Arrays.asList(
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 
+            'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 
+            't', 'u', 'v', 'w', 'x', 'y', 'z'));
     for (int i = 0; i < 26; i++) {
       int index = this.rand.nextInt(26 - i);
       resultCode.add(alphabetToChange.remove(index));
@@ -168,6 +172,7 @@ class ExamplesSecretCode {
   void testEncode(Tester t) {
     t.checkExpect(this.rot13.encode("hello"), "uryyb");
     t.checkExpect(this.rot13.encode("howisyourdaygoing"), "ubjvflbheqnltbvat");
+    t.checkExpect(this.rot13.encode(""), "");
     t.checkExpect(this.v2cm1.encode("goldenexperience"), "hamfopoyqosuopdo");
     t.checkExpect(this.v2cm1.encode("aeioubcd"), "iouaecdf");
   }
@@ -178,6 +183,7 @@ class ExamplesSecretCode {
     t.checkExpect(this.rot13.decode("ubjvflbheqnltbvat"), "howisyourdaygoing");
     t.checkExpect(this.v2cm1.decode("hamfopoyqosuopdo"), "goldenexperience");
     t.checkExpect(this.v2cm1.decode("iouaecdf"), "aeioubcd");
+    t.checkExpect(this.v2cm1.decode(""), "");
   }
   
 }
