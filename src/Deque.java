@@ -31,8 +31,9 @@ class Deque<T> {
    * 
    */
   
+  // Returns the size of the deque
   int size() {
-    return 0;
+    return this.header.next.sizeHelper(0);
   }
   
   void addAtHead(T data) {
@@ -43,12 +44,12 @@ class Deque<T> {
     this.header.prev = new Node<T>(data, this.header, this.header.prev);
   }
   
-  T removeFromHead() {
-    return null;
+  ANode<T> removeFromHead() {
+    return this.header.next.removeH();
   }
   
-  T removeFromTail() {
-    return null;
+  ANode<T> removeFromTail() {
+    return this.header.prev.removeH();
   }
   
   ANode<T> find(Predicate<T> pred) {
@@ -68,6 +69,12 @@ abstract class ANode<T> {
   ANode<T> next;
   ANode<T> prev;
   
+  // Returns the int once it finds the sentenial is the node
+  abstract int sizeHelper(int i);
+
+  // Returns the removed item and removes the head node
+  abstract ANode<T> removeH();
+  
 }
 
 // represents the starter for a Deque
@@ -77,6 +84,16 @@ class Sentinel<T> extends ANode<T>{
   Sentinel() {
     this.next = this;
     this.prev = this;
+  }
+
+  // Returns the int because it has looped
+  int sizeHelper(int i) {
+    return i;
+  }
+
+  // Throws a runtime error
+  ANode<T> removeH() {
+    throw new RuntimeException("Cannot remove from an empty list");
   }
   
   /* fields: 
@@ -121,6 +138,22 @@ class Node<T> extends ANode<T>{
     }
     this.data = data;
   }
+
+  // Adds one to the int and then calls sizeHelper on next
+  int sizeHelper(int i) {
+    return this.next.sizeHelper(i + 1);
+  }
+
+  // Returns the removed item and removes the head node
+  ANode<T> removeH() {
+    ANode<T> nextNode = this.next;
+    ANode<T> prevNode = this.prev;
+    
+    nextNode.prev = prevNode;
+    prevNode.next = nextNode;
+    
+    return this;
+  }
   
   /* fields: 
    *   this.next ... ANode<T>
@@ -138,13 +171,11 @@ class ExamplesDeque {
   
   // example variables
   Deque<String> deque1 = new Deque<String>();
-  Deque<String> dequeAddAtHead = new Deque<String>();
   Sentinel<String> sent1 = new Sentinel<String>();
   ANode<String> node1 = new Node<String>("abc");
   ANode<String> node2 = new Node<String>("bcd");
   ANode<String> node3 = new Node<String>("cde");
   ANode<String> node4 = new Node<String>("def");
-  ANode<String> nodeAddAtHead = new Node<String>("hi");
   
   
   Sentinel<String> sent2 = new Sentinel<String>();
@@ -155,6 +186,9 @@ class ExamplesDeque {
   ANode<String> node9 = new Node<String>("nerd");
   Deque<String> deque2 = new Deque<String>();
   
+  Sentinel<String> sent3 = new Sentinel<String>();
+  Deque<String> deque3 = new Deque<String>();
+  
   void initData() {
     deque1 = new Deque<String>();
     sent1 = this.deque1.header;
@@ -162,7 +196,6 @@ class ExamplesDeque {
     node2 = new Node<String>("bcd", this.sent1, this.node1);
     node3 = new Node<String>("cde", this.sent1, this.node2);
     node4 = new Node<String>("def", this.sent1, this.node3);
-    nodeAddAtHead = new Node<String>("hi", this.sent1, this.node4);
     
     sent2 = new Sentinel<String>();
     node5 = new Node<String>("the", this.sent2, this.sent2);
@@ -171,6 +204,23 @@ class ExamplesDeque {
     node8 = new Node<String>("music", this.sent2, this.node7);
     node9 = new Node<String>("nerd", this.sent2, this.node8);
     deque2 = new Deque<String>(this.sent2);
+    
+    sent3 = new Sentinel<String>();
+    deque3 = new Deque<String>(this.sent3);
+  }
+  
+  // Method to test size
+  void testSize(Tester t) {
+    this.initData();
+    t.checkExpect(deque1.size(), 4);
+    t.checkExpect(deque2.size(), 5);
+  }
+  
+  // Method to test sizeHelper
+  void testSizeHelper(Tester t) {
+    this.initData();
+    t.checkExpect(sent1.sizeHelper(0), 0);
+    t.checkExpect(node9.sizeHelper(2), 3);
   }
   
   void testDeque(Tester t) {
@@ -182,13 +232,37 @@ class ExamplesDeque {
     t.checkExpect(this.deque2.header.next, this.node5);
   }
   
-  void testAddAtHead(Tester t) {
+  // Method to test removeFromHead
+  void testRemoveFromHead(Tester t) {
     this.initData();
-    t.checkExpect(this.deque1.header.next, node1);
-    this.deque1.addAtHead("hi");
-    t.checkExpect(this.deque1, )
-    
+    t.checkExpect(deque1.removeFromHead(), node1);
+    t.checkExpect(deque2.removeFromHead(), node5);
+    t.checkException(new RuntimeException("Cannot remove from an empty list"), deque3, "removeFromHead");
   }
+
+  // Method to test removeFromHead
+  void testRemoveFromTail(Tester t) {
+    this.initData();
+    t.checkExpect(deque1.removeFromTail(), node4);
+    t.checkExpect(deque2.removeFromTail(), node9);
+    t.checkException(new RuntimeException("Cannot remove from an empty list"), deque3, "removeFromHead");
+  }
+  
+  // Method to test the removeH
+  void testRemoveH(Tester t) {
+    this.initData();
+    t.checkExpect(node1.removeH(), node1);
+    t.checkExpect(node5.removeH(), node5);
+    t.checkException(new RuntimeException("Cannot remove from an empty list"), sent3, "removeH");
+  }
+  
+//  void testAddAtHead(Tester t) {
+//    this.initData();
+//    t.checkExpect(this.deque1.header.next, node1);
+//    this.deque1.addAtHead("hi");
+//    t.checkExpect(this.deque1, )
+//    
+//  }
   
 }
 
