@@ -28,7 +28,10 @@ class Deque<T> {
    *   this.find(Predicate<T>) ... ANode<T>
    *   this.removeNode(ANode<T>) ... void
    * methods for fields: 
-   * 
+   *   this.header.sizeHelper(int) ... int
+   *   this.header.addH(T) ... void
+   *   this.header.removeH() ... T
+   *   this.header.findH(Predicate<T>) ... ANode<T>
    */
   
   // Returns the size of the deque
@@ -36,26 +39,34 @@ class Deque<T> {
     return this.header.next.sizeHelper(0);
   }
   
+  // adds a new node at the front of the deque
+  // EFFECT: makes a new node in the header's next position
   void addAtHead(T data) {
     this.header.addH(data);
   }
   
+  // adds a new node at the back of the deque
+  // EFFECT: makes a new node in the header's prev position
   void addAtTail(T data) {
     this.header.prev.addH(data);
   }
   
+  // removes the element at the headers next position
   T removeFromHead() {
     return this.header.next.removeH();
   }
   
+  // removes the element at the headers prev position
   T removeFromTail() {
     return this.header.prev.removeH();
   }
   
+  // finds the given node within the deque
   ANode<T> find(Predicate<T> pred) {
     return this.header.next.findH(pred);
   }
   
+  // removes the given node from the deque
   void removeNode(ANode<T> node) {
     node.removeH();
   }
@@ -80,6 +91,7 @@ abstract class ANode<T> {
   // Returns the removed item and removes the head node
   abstract T removeH();
   
+  // helps to find the node with data matching the given predicate
   abstract ANode<T> findH(Predicate<T> pred);
   
 }
@@ -97,9 +109,19 @@ class Sentinel<T> extends ANode<T> {
    *   this.next ... ANode<T>
    *   this.prev ... ANode<T>
    * methods: 
-   * 
+   *   this.sizeHelper(int) ... int
+   *   this.addH(T) ... void
+   *   this.removeH() ... T
+   *   this.findH(Predicate<T>) ... ANode<T>
    * methods for fields: 
-   * 
+   *   this.next.sizeHelper(int) ... int
+   *   this.next.addH(T) ... void
+   *   this.next.removeH() ... T
+   *   this.next.findH(Predicate<T>) ... ANode<T>
+   *   this.prev.sizeHelper(int) ... int
+   *   this.prev.addH(T) ... void
+   *   this.prev.removeH() ... T
+   *   this.prev.findH(Predicate<T>) ... ANode<T>
    */
 
   // Returns the int because it has looped
@@ -156,9 +178,19 @@ class Node<T> extends ANode<T> {
    *   this.prev ... ANode<T>
    *   this.data ... T
    * methods: 
-   * 
+   *   this.sizeHelper(int) ... int
+   *   this.addH(T) ... void
+   *   this.removeH() ... T
+   *   this.findH(Predicate<T>) ... ANode<T>
    * methods for fields: 
-   * 
+   *   this.next.sizeHelper(int) ... int
+   *   this.next.addH(T) ... void
+   *   this.next.removeH() ... T
+   *   this.next.findH(Predicate<T>) ... ANode<T>
+   *   this.prev.sizeHelper(int) ... int
+   *   this.prev.addH(T) ... void
+   *   this.prev.removeH() ... T
+   *   this.prev.findH(Predicate<T>) ... ANode<T>
    */
 
   // Adds one to the int and then calls sizeHelper on next
@@ -296,7 +328,7 @@ class ExamplesDeque {
     t.checkExpect(this.deque1.header.next, this.newAddH);
   }
   
-  //test addAtTail
+  // test addAtTail
   void testAddAtTail(Tester t) {
     this.initData();
     t.checkExpect(this.deque1.header, this.sent1);
@@ -304,7 +336,17 @@ class ExamplesDeque {
     this.deque1.addAtTail("efg");
     t.checkExpect(this.deque1.header, this.sent1addT);
     t.checkExpect(this.deque1.header.prev, this.newAddT);
- }
+  }
+  
+  // test addH
+  void testAddH(Tester t) {
+    this.initData();
+    t.checkExpect(this.deque1.header, this.sent1);
+    t.checkExpect(this.deque1.header.next, this.node1);
+    this.deque1.header.addH("efg");
+    t.checkExpect(this.deque1.header, this.sent1addH);
+    t.checkExpect(this.deque1.header.next, this.newAddH);
+  }
   
   // Method to test removeFromHead
   void testRemoveFromHead(Tester t) {
@@ -333,6 +375,7 @@ class ExamplesDeque {
         sent3, "removeH");
   }
   
+  // test for find
   void testFind(Tester t) {
     this.initData();
     t.checkExpect(deque1.find((s) -> s.equals("bcd")), node2);
@@ -341,8 +384,14 @@ class ExamplesDeque {
     t.checkExpect(deque2.find((s) -> s.length() > 12), sent2);
   }
   
+  // test for removeNode
   void testRemoveNode(Tester t) {
     this.initData();
+    t.checkExpect(this.deque1addH.header, this.sent1addH);
+    t.checkExpect(this.deque1addH.header.next, this.newAddH);
+    this.deque1addH.removeNode(newAddH);
+    t.checkExpect(this.deque1addH.header, this.sent1);
+    t.checkExpect(this.deque1addH.header.next, this.node1);
   }
   
 }
