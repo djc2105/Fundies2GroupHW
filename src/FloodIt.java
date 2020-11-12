@@ -7,6 +7,13 @@ import javalib.impworld.*;
 import java.awt.Color;
 import javalib.worldimages.*;
 
+class Util {
+  
+  static int BOARD_SIZE = 24;
+  static int TILE_SIZE = 20;
+  
+}
+
 //Represents a single square of the game area
 class Cell {
   
@@ -18,6 +25,7 @@ class Cell {
   Random random;
   
   public Cell(int x, int y, Random random) {
+    
     this.x = x;
     this.y = y;
     this.color = genColor(random);
@@ -42,34 +50,54 @@ class Cell {
     return(colors.get(random.nextInt(6)));
   }
   
+  void drawCell(WorldScene ws) {
+    int s = Util.TILE_SIZE;
+    ws.placeImageXY(new RectangleImage(s, s, 
+        OutlineMode.SOLID, this.color)
+        .movePinhole(-s / 2, -s / 2), 
+        (this.x + 1) * s, 
+        (this.y + 1) * s);
+  }
+  
 }
 
 
 class FloodItWorld extends World {
-  
-  // size of the board
-  int BOARD_SIZE = 2;
-  int TILE_SIZE = 10;
+ 
   // All the cells of the game
   ArrayList<ArrayList<Cell>> board;
   
   // constructor
   FloodItWorld() {
-    board = this.createBoard();
+    this.board = this.createBoard();
+  }
+  
+  // convenience constructor
+  FloodItWorld(ArrayList<ArrayList<Cell>> board) {
+    this.board = board;;
   }
 
   // creates the game
   public WorldScene makeScene() {
-    return null;
+    int size = Util.BOARD_SIZE * Util.TILE_SIZE;
+    WorldScene scene = this.getEmptyScene();
+    scene.placeImageXY(new RectangleImage(size, size, OutlineMode.SOLID, Color.WHITE), 
+        size / 2, size / 2);
+    for (ArrayList<Cell> i : board) {
+      for (Cell j : i) {
+        j.drawCell(scene);
+      }
+    }
+    return scene;
   }
   
   ArrayList<ArrayList<Cell>> createBoard() {
     Random random = new Random();
-    ArrayList<ArrayList<Cell>> temp = new ArrayList<ArrayList<Cell>>(BOARD_SIZE);
+    ArrayList<ArrayList<Cell>> temp = new ArrayList<ArrayList<Cell>>(Util.BOARD_SIZE);
     
-    for (int y = 0; y < BOARD_SIZE; y++) {
-      ArrayList<Cell> tempRow = new ArrayList<Cell>(BOARD_SIZE);
-      for (int x = 0; x < BOARD_SIZE; x++) {
+    for (int y = 0; y < Util.BOARD_SIZE; y++) {
+      ArrayList<Cell> tempRow = new ArrayList<Cell>(Util.BOARD_SIZE);
+      for (int x = 0; x < Util.BOARD_SIZE; x++) {
         tempRow.add(x, new Cell(x, y, random));
       }
       temp.add(y, tempRow);
@@ -79,8 +107,10 @@ class FloodItWorld extends World {
   }
   
   public void onTick() {
-    WorldImage background = new RectangleImage((BOARD_SIZE + 2) * TILE_SIZE, 
-        (BOARD_SIZE + 2) * TILE_SIZE, OutlineMode.SOLID, Color.white);
+    WorldImage background = 
+        new RectangleImage((Util.BOARD_SIZE + 2) * Util.TILE_SIZE, 
+        (Util.BOARD_SIZE + 2) * Util.TILE_SIZE, 
+        OutlineMode.SOLID, Color.white);
     
     this.getEmptyScene().placeImageXY(background, 0, 0);
     
@@ -90,9 +120,10 @@ class FloodItWorld extends World {
 
 class ExamplesFloodIt {
   FloodItWorld w = new FloodItWorld();
-  
   void testWorld(Tester t) {
-    w.bigBang(1000, 1000);
+    int totalSize = Util.TILE_SIZE * 
+        (Util.BOARD_SIZE + 2);
+    w.bigBang(totalSize, totalSize, 1);
   }
 }
 
