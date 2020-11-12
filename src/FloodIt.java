@@ -1,11 +1,11 @@
 
 import java.util.ArrayList;
 import java.util.Random;
-
 import tester.*;
 import javalib.impworld.*;
 import java.awt.Color;
 import javalib.worldimages.*;
+import sun.tools.tree.ThisExpression;
 
 class Util {
   
@@ -38,7 +38,7 @@ class Cell {
     }
   }
 
-  private Color genColor(Random random) {
+  Color genColor(Random random) {
     ArrayList<Color> colors = new ArrayList<Color>(0);
     colors.add(Color.red);
     colors.add(Color.orange);
@@ -120,11 +120,70 @@ class FloodItWorld extends World {
 
 class ExamplesFloodIt {
   FloodItWorld w = new FloodItWorld();
+  Cell tile00 = new Cell(0, 0, new Random(1));
+  Cell tile10 = new Cell(1, 0, new Random(2));
+  Cell tile01 = new Cell(1, 0, new Random(3));
+  Cell tile11 = new Cell(1, 1, new Random(4));
+  ArrayList<Cell> row1 = new ArrayList<Cell>(0);
+  ArrayList<Cell> row2 = new ArrayList<Cell>(0);
+  ArrayList<ArrayList<Cell>> board1 = new ArrayList<ArrayList<Cell>>(0);  
+  FloodItWorld testW = new FloodItWorld(this.board1); 
+  Cell c1 = new Cell(0, 0, new Random(5));
+  
+  void init() {
+    w = new FloodItWorld();
+    tile00 = new Cell(0, 0, new Random(1));
+    tile10 = new Cell(1, 0, new Random(2));
+    tile01 = new Cell(1, 0, new Random(3));
+    tile11 = new Cell(1, 1, new Random(4));
+    row1 = new ArrayList<Cell>(0);
+    row2 = new ArrayList<Cell>(0);
+    board1 = new ArrayList<ArrayList<Cell>>(0);  
+    this.row1.add(tile00);
+    this.row1.add(tile10);
+    this.row2.add(tile01);
+    this.row2.add(tile11);
+    this.board1.add(this.row1);
+    this.board1.add(this.row2);
+    testW = new FloodItWorld(this.board1); 
+    c1 = new Cell(0, 0, new Random(5));
+  }
+  
+  
+  
   void testWorld(Tester t) {
     int totalSize = Util.TILE_SIZE * 
         (Util.BOARD_SIZE + 2);
     w.bigBang(totalSize, totalSize, 1);
   }
+  
+  // A method to test the drawCell method of Cell
+  void testDrawCell(Tester t) {
+    
+  }
+  
+  // A method to test the OnTick method of FloodItWorld
+  void testOnTick(Tester t) {
+    
+  }
+  
+  // A method to test the createBoard method
+  void testCreateBoard(Tester t) {
+    
+  }
+  
+  // A method to test the createScene method
+  void testCreateScene(Tester t) {
+    
+  }
+  
+  // A method to test the genColor method of Cell
+  void testGenColor(Tester t) {
+    init();
+    t.checkExpect(this.c1.genColor(new Random(5)), Color.pink);
+    t.checkExpect(this.c1.genColor(new Random(8)), Color.blue);
+  }
+  
 }
 
 
