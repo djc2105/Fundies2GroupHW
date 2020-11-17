@@ -21,6 +21,7 @@ class Cell {
   int y;
   Color color;
   boolean flooded;
+  boolean checked;
   Random random;
   
   // constructor
@@ -30,6 +31,7 @@ class Cell {
     this.y = y;
     this.color = genColor(random);
     this.random = random;
+    this.checked = false;
     
     if (this.x == 0 && this.y == 0) {
       this.flooded = true;
@@ -86,6 +88,29 @@ class Cell {
     this.color = color;
   }
   
+  // floods the cells around this cell if they should be flooded
+  void floodCell(Color c, int boardSize, ArrayList<ArrayList<Cell>> board) {
+    if(this.flooded && !this.checked) {
+      this.color = c;
+      this.checked = true;
+      if(this.x > 0) {
+        board.get(this.y).get(this.x-1).floodCell(c, boardSize, board);
+      }
+      if(this.x < boardSize-1) {
+        board.get(this.y).get(this.x+1).floodCell(c, boardSize, board);
+      }
+      if(this.y > 0) {
+        board.get(this.y-1).get(this.x).floodCell(c, boardSize, board);
+      }
+      if(this.y < boardSize-1) {
+        board.get(this.y+1).get(this.x).floodCell(c, boardSize, board);
+      }
+    } else if (this.color == c && !this.flooded) {
+      this.flooded = true;
+      this.floodCell(c, boardSize, board);
+    }
+  }
+  
 }
 
 // represents the game
@@ -103,6 +128,7 @@ class FloodItWorld extends World {
     this.boardSize = boardSize;
     this.random = new Random();
     this.board = this.createBoard();
+    this.floodBoard(this.board.get(0).get(0).color);
     this.score = 0;
     this.scoreMax = scoreMax;
   }
@@ -112,6 +138,7 @@ class FloodItWorld extends World {
     this.boardSize = boardSize;
     this.random = random;
     this.board = this.createBoard();
+    this.floodBoard(this.board.get(0).get(0).color);
     this.score = 0;
     this.scoreMax = scoreMax;
   }
@@ -192,7 +219,13 @@ class FloodItWorld extends World {
   // floods the board with the given color
   // EFFECT: changes the color of every cell connected to the top left
   void floodBoard(Color c) {
-    board.get(0).get(0).setColor(c);
+    this.board.get(0).get(0).floodCell(c, this.boardSize, this.board);
+    
+    for(int i = 0; i < this.boardSize; i++) {
+      for(int j = 0; j < this.boardSize; j++) {
+        this.board.get(j).get(i).checked = false;
+      }
+    }
   }
   
   // returns true if every cell is the same colour
@@ -236,7 +269,7 @@ class FloodItWorld extends World {
 class ExamplesFloodIt {
   
   // example variables
-  FloodItWorld w = new FloodItWorld(24, 25);
+  FloodItWorld w = new FloodItWorld(24, 100);
   Cell tile00 = new Cell(0, 0, new Random(1));
   Cell tile10 = new Cell(1, 0, new Random(2));
   Cell tile01 = new Cell(0, 1, new Random(3));
@@ -352,6 +385,65 @@ class ExamplesFloodIt {
     t.checkExpect(this.c1.genColor(new Random(8)), Color.blue);
   }
   
+  // A method to test floodCell
+  void testFloodCell(Tester t) {
+    init();
+    // (Green Flood)  (Blue Not Flood)
+    // (Yellow NF)   (Yellow NF)
+    t.checkExpect(this.tile00.flooded, true);
+    t.checkExpect(this.tile10.flooded, false);
+    t.checkExpect(this.tile01.flooded, false);
+    t.checkExpect(this.tile11.flooded, false);
+    
+    this.tile00.floodCell(Color.yellow, 2, this.board1);
+    // (Yellow F)  (Green NF)
+    // (Yellow F)  (Yellow F)
+    t.checkExpect(this.tile00.flooded, true);
+    t.checkExpect(this.tile10.flooded, false);
+    t.checkExpect(this.tile01.flooded, true);
+    t.checkExpect(this.tile11.flooded, true);
+    t.checkExpect(this.tile00.color, Color.yellow);
+    
+    init();
+    this.tile00.floodCell(Color.blue, 2, this.board1);
+    // (Yellow F)  (Green NF)
+    // (Yellow F)  (Yellow F)
+    t.checkExpect(this.tile00.flooded, true);
+    t.checkExpect(this.tile10.flooded, true);
+    t.checkExpect(this.tile01.flooded, false);
+    t.checkExpect(this.tile11.flooded, false);
+    t.checkExpect(this.tile00.color, Color.blue);
+  }
+  
+  // A method to test the floodBoard method
+  void testFloodBoard(Tester t) {
+    init();
+    // (Green Flood)  (BLue Not Flood)
+    // (Yellow NF)   (Yellow NF)
+    t.checkExpect(this.tile00.flooded, true);
+    t.checkExpect(this.tile10.flooded, false);
+    t.checkExpect(this.tile01.flooded, false);
+    t.checkExpect(this.tile11.flooded, false);
+    t.checkExpect(this.tile00.color, Color.green);
+    
+    this.testW.floodBoard(Color.yellow);
+    // (Yellow F)  (Blue NF)
+    // (Yellow F)  (Yellow F)
+    t.checkExpect(this.tile00.flooded, true);
+    t.checkExpect(this.tile10.flooded, false);
+    t.checkExpect(this.tile01.flooded, true);
+    t.checkExpect(this.tile11.flooded, true);
+    t.checkExpect(this.tile00.color, Color.yellow);
+    
+    this.testW.floodBoard(Color.blue);
+    // (Blue F)  (Blue F)
+    // (Blue F)  (Blue F)
+    t.checkExpect(this.tile00.flooded, true);
+    t.checkExpect(this.tile10.flooded, true);
+    t.checkExpect(this.tile01.flooded, true);
+    t.checkExpect(this.tile11.flooded, true);
+    t.checkExpect(this.tile00.color, Color.blue);
+  }
 }
 
 
