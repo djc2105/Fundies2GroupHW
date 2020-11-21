@@ -95,39 +95,39 @@ class Cell {
   ArrayList<Cell> floodCell(Color c, int boardSize, ArrayList<ArrayList<Cell>> board) {
     ArrayList<Cell> nextCellsToFlood = new ArrayList<Cell>(0);
     
-    if(this.flooded && this.color != c) {
+    if (this.flooded && this.color != c) {
       this.color = c;
     } else if (this.color == c && !this.flooded) {
       this.flooded = true;
     }
     
-    if(this.flooded) {
-      if(this.x > 0) {
+    if (this.flooded) {
+      if (this.x > 0) {
         Cell cellToBeAddedCell = board.get(this.y).get(this.x - 1);
-        if(cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
+        if (cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
           nextCellsToFlood.add(cellToBeAddedCell);
         }
       }
-      if(this.x < boardSize-1) {
+      if (this.x < boardSize - 1) {
         Cell cellToBeAddedCell = board.get(this.y).get(this.x + 1);
-        if(cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
+        if (cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
           nextCellsToFlood.add(cellToBeAddedCell);
         }
       }
-      if(this.y > 0) {
+      if (this.y > 0) {
         Cell cellToBeAddedCell = board.get(this.y - 1).get(this.x);
-        if(cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
+        if (cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
           nextCellsToFlood.add(cellToBeAddedCell);
         }
       }
-      if(this.y < boardSize-1) {
+      if (this.y < boardSize - 1) {
         Cell cellToBeAddedCell = board.get(this.y + 1).get(this.x);
-        if(cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
+        if (cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
           nextCellsToFlood.add(cellToBeAddedCell);
         }
       }
     } 
-    for(Cell cell: nextCellsToFlood) {
+    for (Cell cell: nextCellsToFlood) {
       cell.colorToBeChecked = c;
     }
     
@@ -146,7 +146,9 @@ class FloodItWorld extends World {
   int scoreMax;
   Random random;
   int time;
+  // We wanted to declare this in a constructor but it breaks the code somehow
   ArrayList<Cell> cellsToFlood = new ArrayList<Cell>(0);
+  Boolean worldIsRunning;
   
   // constructor
   FloodItWorld(int boardSize, int scoreMax) {
@@ -157,6 +159,7 @@ class FloodItWorld extends World {
     this.score = 0;
     this.scoreMax = scoreMax;
     this.time = 0;
+    this.worldIsRunning = true;
   }
   
   // convenience constructor - takes a random
@@ -168,16 +171,18 @@ class FloodItWorld extends World {
     this.score = 0;
     this.scoreMax = scoreMax;
     this.time = 0;
+    this.worldIsRunning = true;
   }
   
   // convenience constructor - takes a board
-  FloodItWorld(ArrayList<ArrayList<Cell>> board, int scoreMax) {
+  FloodItWorld(ArrayList<ArrayList<Cell>> board, int scoreMax, Random random) {
     this.board = board;
     this.boardSize = board.size();
-    this.random = new Random();
+    this.random = random;
     this.score = 0;
     this.scoreMax = scoreMax;
     this.time = 0;
+    this.worldIsRunning = true;
   }
   
   /* fields: 
@@ -187,12 +192,15 @@ class FloodItWorld extends World {
    *   this.score ... int
    *   this.scoreMax ... int
    *   this.time ... int
+   *   this.cellsToFlood ... ArrayList<Cell>
+   *   this.worldIsRunning ... boolean
    * methods: 
    *   this.makeScene() ... WorldScene
    *   this.checkWin() ... Boolean
    *   this.makeEnd(String) ... WorldScene
    *   this.createBoard() ... ArrayList<ArrayList<Cell>>
    *   this.onTick() ... void
+   *   this.removeDuplicates(ArrayList<T>) ... ArrayList<T>
    *   this.onMouseClicked(Posn) ... void
    *   this.floodBoard(Color) ... void
    *   this.onKeyEvent(String) ... void
@@ -216,10 +224,10 @@ class FloodItWorld extends World {
           size / 2, size / 2);
       scene.placeImageXY(new TextImage("Score: " + this.score + "/" + this.scoreMax, 
           20, Color.BLACK), size / 4, size + (2 * Util.TILE_SIZE));
-      scene.placeImageXY(new TextImage("Time: " + this.time, 
+      scene.placeImageXY(new TextImage("Time: " + this.time / 10, 
           20, Color.BLACK), 3 * size / 4, size + (2 * Util.TILE_SIZE));
       scene.placeImageXY(new TextImage("Press 'r' to restart or 'escape' to exit", 
-          20, Color.BLACK), size / 2, size + (4 * Util.TILE_SIZE));
+          20, Color.BLACK), size / 2 + (Util.TILE_SIZE), size + (4 * Util.TILE_SIZE));
       for (ArrayList<Cell> i : board) {
         for (Cell j : i) {
           j.drawCell(scene);
@@ -273,22 +281,35 @@ class FloodItWorld extends World {
     
     ArrayList<Cell> newCellsToFlood = new ArrayList<Cell>(0);
     
-    for(Cell cell: cellsToFlood) {
-      ArrayList<Cell> cellsCellsToFlood = cell.floodCell(cell.colorToBeChecked, this.boardSize, this.board);
-      for(Cell newCell: cellsCellsToFlood) {
-        newCellsToFlood.add(newCell);
-      }
+    cellsToFlood = removeDuplicates(cellsToFlood);
+    
+    for (Cell cell: cellsToFlood) {
+      ArrayList<Cell> cellsCellsToFlood = 
+          cell.floodCell(cell.colorToBeChecked, this.boardSize, this.board);
+      newCellsToFlood.addAll(cellsCellsToFlood);
     }    
     cellsToFlood = newCellsToFlood;
   }
   
+  // A method to remove duplicates from a list
+  <T> ArrayList<T> removeDuplicates(ArrayList<T> list) {
+    ArrayList<T> result = new ArrayList<T>(0);
+    
+    for (T t: list) {
+      if (!result.contains(t)) {
+        result.add(t);
+      }
+    }
+    return result;
+  }
+
   // handles mouse clicks
   // EFFECT: Floods the board
   public void onMouseClicked(Posn p) {
     int xPos = (p.x / Util.TILE_SIZE) - 1;
     int yPos = (p.y / Util.TILE_SIZE) - 1;
-    if (((xPos >= 0) && (xPos <= boardSize))
-      && ((yPos >= 0) && (yPos <= boardSize))) {
+    if (((xPos >= 0) && (xPos <= boardSize)) 
+        && ((yPos >= 0) && (yPos <= boardSize))) {
       Color clickedColor = this.board.get(yPos).get(xPos).getColor();
       Color baseColor = this.board.get(0).get(0).getColor();
       if (clickedColor != baseColor) {
@@ -303,9 +324,7 @@ class FloodItWorld extends World {
   void floodBoard(Color c) {
     ArrayList<Cell> nextCells = this.board.get(0).get(0).floodCell(c, this.boardSize, this.board);
     
-    for(Cell cell: nextCells) {
-      cellsToFlood.add(cell);
-    }
+    this.cellsToFlood.addAll(nextCells);
   }
   
   // handles key presses
@@ -324,10 +343,14 @@ class FloodItWorld extends World {
   // EFFECT: creates a new board
   void resetBoard() {
     this.board = createBoard();
+    this.floodBoard(this.board.get(0).get(0).getColor());
+    this.score = 0;
+    this.time = 0;
   }
   
   // returns the end scene for the game
   public WorldScene lastScene(String s) {
+    this.worldIsRunning = false;
     WorldScene end = this.getEmptyScene();
     end.placeImageXY(new RectangleImage(600, 300, 
         OutlineMode.SOLID, Color.WHITE), 300, 150);
@@ -340,7 +363,7 @@ class FloodItWorld extends World {
 class ExamplesFloodIt {
   
   // example variables
-  FloodItWorld w = new FloodItWorld(24, 40);
+  FloodItWorld w = new FloodItWorld(14, 30);
   Cell tile00 = new Cell(0, 0, new Random(1));
   Cell tile10 = new Cell(1, 0, new Random(2));
   Cell tile01 = new Cell(0, 1, new Random(3));
@@ -348,9 +371,11 @@ class ExamplesFloodIt {
   ArrayList<Cell> row1 = new ArrayList<Cell>(0);
   ArrayList<Cell> row2 = new ArrayList<Cell>(0);
   ArrayList<ArrayList<Cell>> board1 = new ArrayList<ArrayList<Cell>>(0);  
-  FloodItWorld testW = new FloodItWorld(this.board1, 40); 
+  FloodItWorld testW = new FloodItWorld(this.board1, 40, new Random(5)); 
   FloodItWorld testW2 = new FloodItWorld(2, 40, new Random(5));
   Cell c1 = new Cell(0, 0, new Random(5));
+  ArrayList<Integer> a1;
+  ArrayList<String> a2;
   
   // initialize the data
   void init() {
@@ -367,9 +392,11 @@ class ExamplesFloodIt {
     this.row2.add(tile11);
     this.board1.add(this.row1);
     this.board1.add(this.row2);
-    testW = new FloodItWorld(this.board1, 40); 
+    testW = new FloodItWorld(this.board1, 40, new Random(5)); 
     testW2 = new FloodItWorld(2, 40, new Random(5));
     c1 = new Cell(0, 0, new Random(5));
+    a1 = new ArrayList<Integer>(Arrays.asList(1,2,3,4,4,5,5,5,5));
+    a2 = new ArrayList<String>(Arrays.asList("A","B","C","C"));
   }
   
   // test to play the game
@@ -478,6 +505,14 @@ class ExamplesFloodIt {
         .movePinhole(-10, -10), 20, 30);
     checkScene.placeImageXY(new RectangleImage(10, 10, OutlineMode.SOLID, Color.YELLOW)
         .movePinhole(-10, -10), 30, 30);
+    checkScene.placeImageXY(new RectangleImage(20, 70, OutlineMode.SOLID, Color.WHITE), 
+        10, 10);
+    checkScene.placeImageXY(new TextImage("Score: 0/40", 20, Color.BLACK), 
+        5, 30);
+    checkScene.placeImageXY(new TextImage("Time: 0", 20, Color.BLACK),
+        15, 30);
+    checkScene.placeImageXY(new TextImage("Press 'r' to restart or 'escape' to exit", 
+        20, Color.BLACK), 20, 60);
     t.checkExpect(this.testW.makeScene(), checkScene);
   }
   
@@ -495,7 +530,20 @@ class ExamplesFloodIt {
   // test the makeEnd function
   void testMakeEnd(Tester t) {
     init();
-    
+    WorldScene checkScene1 = new WorldScene(0, 0);
+    checkScene1.placeImageXY(new RectangleImage(600, 300, 
+        OutlineMode.SOLID, Color.WHITE), 300, 150);
+    checkScene1.placeImageXY(new TextImage("You Win!", 25, Color.BLACK), 300, 100);
+    checkScene1.placeImageXY(new TextImage("Press 'r' to restart or 'escape' to exit", 
+        25, Color.BLACK), 300, 200);
+    WorldScene checkScene2 = new WorldScene(0, 0);
+    checkScene2.placeImageXY(new RectangleImage(600, 300, 
+        OutlineMode.SOLID, Color.WHITE), 300, 150);
+    checkScene2.placeImageXY(new TextImage("You... tie?", 25, Color.BLACK), 300, 100);
+    checkScene2.placeImageXY(new TextImage("Press 'r' to restart or 'escape' to exit", 
+        25, Color.BLACK), 300, 200);
+    t.checkExpect(this.testW.makeEnd("You Win!"), checkScene1);
+    t.checkExpect(this.testW.makeEnd("You... tie?"), checkScene2);
   }
   
   // A method to test the createBoard method
@@ -531,10 +579,27 @@ class ExamplesFloodIt {
     t.checkExpect(this.testW.time, 4);
   }
   
+  // a test for the removeDuplicates method
+  void testRemoveDuplicates(Tester t) {
+    t.checkExpect(this.testW.removeDuplicates(a1), 
+        new ArrayList<Integer>(Arrays.asList(1,2,3,4,5)));
+    t.checkExpect(this.testW.removeDuplicates(a2), 
+        new ArrayList<String>(Arrays.asList("A","B","C")));
+  }
+  
   // a test for onMouseClicked
   void testOnMouseClicked(Tester t) {
     init();
-    
+    t.checkExpect(this.testW.score, 0);
+    t.checkExpect(this.testW.board.get(0).get(0).color, Color.GREEN);
+    this.testW.onMouseClicked(new Posn(45, 25));
+    this.testW.onTick();
+    t.checkExpect(this.testW.score, 1);
+    t.checkExpect(this.testW.board.get(0).get(0).color, Color.BLUE);
+    this.testW.onMouseClicked(new Posn(35, 45));
+    this.testW.onTick();
+    t.checkExpect(this.testW.score, 2);
+    t.checkExpect(this.testW.board.get(0).get(0).color, Color.YELLOW);
   }
   
   // A method to test the floodBoard method
@@ -576,17 +641,45 @@ class ExamplesFloodIt {
   // a test for onKeyEvent
   void testOnKeyEvent(Tester t) {
     init();
+    t.checkExpect(this.testW.board.get(0).get(0).color, Color.GREEN);
+    this.testW.onKeyEvent("r");
+    t.checkExpect(this.testW.board.get(0).get(0).color, Color.PINK);
+    this.testW.onKeyEvent("h");
+    t.checkExpect(this.testW.board.get(0).get(0).color, Color.PINK);
+    t.checkExpect(this.testW.worldIsRunning, true);
+    this.testW.onKeyEvent("escape");
+    t.checkExpect(this.testW.worldIsRunning, false);
   }
   
   // a test for resetBoard
   void testResetBoard(Tester t) {
     init();
+    this.testW.onTick();
+    this.testW.onTick();
+    this.testW.onTick();
+    t.checkExpect(this.testW.board.get(0).get(0).getColor(), Color.GREEN);
+    t.checkExpect(this.testW.time, 3);
+    this.testW.resetBoard();
+    t.checkExpect(this.testW.board.get(0).get(0).getColor(), Color.PINK);
+    t.checkExpect(this.testW.time, 0);
   }
   
   // a test for lastScene
   void testLastScene(Tester t) {
     init();
+    WorldScene checkWorld1 = new WorldScene(0, 0);
+    checkWorld1.placeImageXY(new RectangleImage(600, 300, 
+        OutlineMode.SOLID, Color.WHITE), 300, 150);
+    checkWorld1.placeImageXY(new TextImage("test", 25, Color.BLACK), 300, 100);
+    WorldScene checkWorld2 = new WorldScene(0, 0);
+    checkWorld2.placeImageXY(new RectangleImage(600, 300, 
+        OutlineMode.SOLID, Color.WHITE), 300, 150);
+    checkWorld2.placeImageXY(new TextImage("Goodbye!", 25, Color.BLACK), 300, 100);
+    t.checkExpect(this.testW.lastScene("test"), checkWorld1);
+    t.checkExpect(this.testW.lastScene("Goodbye!"), checkWorld2);
+    
   }
+ 
 }
 
 
