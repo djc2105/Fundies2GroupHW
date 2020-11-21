@@ -20,8 +20,8 @@ class Cell {
   int x;
   int y;
   Color color;
+  Color colorToBeChecked;
   boolean flooded;
-  boolean checked;
   Random random;
   
   // constructor
@@ -31,7 +31,6 @@ class Cell {
     this.y = y;
     this.color = genColor(random);
     this.random = random;
-    this.checked = false;
     
     if (this.x == 0 && this.y == 0) {
       this.flooded = true;
@@ -93,26 +92,46 @@ class Cell {
   }
   
   // floods the cells around this cell if they should be flooded
-  void floodCell(Color c, int boardSize, ArrayList<ArrayList<Cell>> board) {
-    if(this.flooded && !this.checked) {
+  ArrayList<Cell> floodCell(Color c, int boardSize, ArrayList<ArrayList<Cell>> board) {
+    ArrayList<Cell> nextCellsToFlood = new ArrayList<Cell>(0);
+    
+    if(this.flooded && this.color != c) {
       this.color = c;
-      this.checked = true;
-      if(this.x > 0) {
-        board.get(this.y).get(this.x-1).floodCell(c, boardSize, board);
-      }
-      if(this.x < boardSize-1) {
-        board.get(this.y).get(this.x+1).floodCell(c, boardSize, board);
-      }
-      if(this.y > 0) {
-        board.get(this.y-1).get(this.x).floodCell(c, boardSize, board);
-      }
-      if(this.y < boardSize-1) {
-        board.get(this.y+1).get(this.x).floodCell(c, boardSize, board);
-      }
     } else if (this.color == c && !this.flooded) {
       this.flooded = true;
-      this.floodCell(c, boardSize, board);
     }
+    
+    if(this.flooded) {
+      if(this.x > 0) {
+        Cell cellToBeAddedCell = board.get(this.y).get(this.x - 1);
+        if(cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
+          nextCellsToFlood.add(cellToBeAddedCell);
+        }
+      }
+      if(this.x < boardSize-1) {
+        Cell cellToBeAddedCell = board.get(this.y).get(this.x + 1);
+        if(cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
+          nextCellsToFlood.add(cellToBeAddedCell);
+        }
+      }
+      if(this.y > 0) {
+        Cell cellToBeAddedCell = board.get(this.y - 1).get(this.x);
+        if(cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
+          nextCellsToFlood.add(cellToBeAddedCell);
+        }
+      }
+      if(this.y < boardSize-1) {
+        Cell cellToBeAddedCell = board.get(this.y + 1).get(this.x);
+        if(cellToBeAddedCell.color != c || !cellToBeAddedCell.flooded) {  
+          nextCellsToFlood.add(cellToBeAddedCell);
+        }
+      }
+    } 
+    for(Cell cell: nextCellsToFlood) {
+      cell.colorToBeChecked = c;
+    }
+    
+    return nextCellsToFlood;
   }
   
 }
@@ -127,6 +146,7 @@ class FloodItWorld extends World {
   int scoreMax;
   Random random;
   int time;
+  ArrayList<Cell> cellsToFlood = new ArrayList<Cell>(0);
   
   // constructor
   FloodItWorld(int boardSize, int scoreMax) {
@@ -247,9 +267,19 @@ class FloodItWorld extends World {
   }
   
   // measures the time spent playing
-  // EFFECT: adds 1 to time each tick
+  // EFFECT: adds 1 to time each tick and updates the board flood
   public void onTick() {
     time += 1;
+    
+    ArrayList<Cell> newCellsToFlood = new ArrayList<Cell>(0);
+    
+    for(Cell cell: cellsToFlood) {
+      ArrayList<Cell> cellsCellsToFlood = cell.floodCell(cell.colorToBeChecked, this.boardSize, this.board);
+      for(Cell newCell: cellsCellsToFlood) {
+        newCellsToFlood.add(newCell);
+      }
+    }    
+    cellsToFlood = newCellsToFlood;
   }
   
   // handles mouse clicks
@@ -271,12 +301,10 @@ class FloodItWorld extends World {
   // floods the board with the given color
   // EFFECT: changes the color of every cell connected to the top left
   void floodBoard(Color c) {
-    this.board.get(0).get(0).floodCell(c, this.boardSize, this.board);
+    ArrayList<Cell> nextCells = this.board.get(0).get(0).floodCell(c, this.boardSize, this.board);
     
-    for(int i = 0; i < this.boardSize; i++) {
-      for(int j = 0; j < this.boardSize; j++) {
-        this.board.get(j).get(i).checked = false;
-      }
+    for(Cell cell: nextCells) {
+      cellsToFlood.add(cell);
     }
   }
   
@@ -347,7 +375,7 @@ class ExamplesFloodIt {
   // test to play the game
   void testWorld(Tester t) {
     init();
-    w.bigBang(1920, 1080, 1);
+    w.bigBang(1920, 1080, 0.1);
   }
   
   // A method to test the genColor method of Cell
@@ -421,23 +449,19 @@ class ExamplesFloodIt {
     t.checkExpect(this.tile11.flooded, false);
     
     this.tile00.floodCell(Color.yellow, 2, this.board1);
-    // (Yellow F)  (Green NF)
+    this.tile01.floodCell(Color.yellow, 2, this.board1);
+    this.tile10.floodCell(Color.yellow, 2, this.board1);
+    this.tile11.floodCell(Color.yellow, 2, this.board1);
+    // (Yellow F)  (Blue NF)
     // (Yellow F)  (Yellow F)
     t.checkExpect(this.tile00.flooded, true);
     t.checkExpect(this.tile10.flooded, false);
     t.checkExpect(this.tile01.flooded, true);
     t.checkExpect(this.tile11.flooded, true);
     t.checkExpect(this.tile00.color, Color.yellow);
-    
-    init();
-    this.tile00.floodCell(Color.blue, 2, this.board1);
-    // (Yellow F)  (Green NF)
-    // (Yellow F)  (Yellow F)
-    t.checkExpect(this.tile00.flooded, true);
-    t.checkExpect(this.tile10.flooded, true);
-    t.checkExpect(this.tile01.flooded, false);
-    t.checkExpect(this.tile11.flooded, false);
-    t.checkExpect(this.tile00.color, Color.blue);
+    t.checkExpect(this.tile10.color, Color.blue);
+    t.checkExpect(this.tile01.color, Color.yellow);
+    t.checkExpect(this.tile11.color, Color.yellow);
   }
   
   // A method to test the createScene method
@@ -487,6 +511,11 @@ class ExamplesFloodIt {
             new ArrayList<Cell>(Arrays.asList(
                 new Cell(0, 1, testRand), 
                 new Cell(1, 1, testRand)))));
+    testBoard.get(0).get(1).colorToBeChecked = Color.PINK;
+    testBoard.get(1).get(0).colorToBeChecked = Color.PINK;
+    this.testW2.onTick();
+    this.testW2.onTick();
+    this.testW2.onTick();
     t.checkExpect(testW2.board, testBoard);
   }
   
@@ -520,6 +549,9 @@ class ExamplesFloodIt {
     t.checkExpect(this.tile00.color, Color.green);
     
     this.testW.floodBoard(Color.yellow);
+    this.testW.onTick();
+    this.testW.onTick();
+    this.testW.onTick();
     // (Yellow F)  (Blue NF)
     // (Yellow F)  (Yellow F)
     t.checkExpect(this.tile00.flooded, true);
@@ -529,6 +561,9 @@ class ExamplesFloodIt {
     t.checkExpect(this.tile00.color, Color.yellow);
     
     this.testW.floodBoard(Color.blue);
+    this.testW.onTick();
+    this.testW.onTick();
+    this.testW.onTick();
     // (Blue F)  (Blue F)
     // (Blue F)  (Blue F)
     t.checkExpect(this.tile00.flooded, true);
@@ -552,7 +587,6 @@ class ExamplesFloodIt {
   void testLastScene(Tester t) {
     init();
   }
-  
 }
 
 
