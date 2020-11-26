@@ -1,4 +1,6 @@
+package OldHW;
 import java.util.function.BiFunction;
+
 import tester.*;
 
 // A class to represent an Instructor
