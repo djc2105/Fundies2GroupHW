@@ -171,7 +171,6 @@ class BridgItWorld extends World {
   // handles mouse clicks
   // EFFECT: Changes the colour of a cell
   public void onMouseClicked(Posn p) {
-    // to be implemented in Part 2
     int xPos = p.x / Util.TILE_SIZE;
     int yPos = p.y / Util.TILE_SIZE;
     if (((xPos > 0) && (xPos < boardSize - 1)) 
@@ -181,20 +180,21 @@ class BridgItWorld extends World {
       if (this.pinkTurn && (clickedColor == Color.WHITE)) {
         clickedCell.color = Color.PINK;
         this.pinkTurn = false;
+        this.checkWin();
       } else if (!this.pinkTurn && (clickedColor == Color.WHITE)) {
         clickedCell.color = Color.MAGENTA;
         this.pinkTurn = true;
+        this.checkWin();
       }
     }
   }
   
   // returns the end scene for the game
   public WorldScene lastScene(String s) {
-    // to be implemented in Part 2
-    WorldScene end = this.getEmptyScene();
-    end.placeImageXY(new RectangleImage(600, 300, 
-        OutlineMode.SOLID, Color.WHITE), 300, 150);
-    end.placeImageXY(new TextImage(s, 25, Color.BLACK), 300, 100);
+    WorldScene end = this.makeScene();
+    int size = this.boardSize * Util.TILE_SIZE;
+    end.placeImageXY(new TextImage(s, this.boardSize * 1.5, Color.BLACK), 
+        size / 2, size / 2);
     return end;
   }
   
@@ -251,7 +251,7 @@ class ExamplesBridgIt {
   // a test for drawCell in the Cell class
   void testDrawCell(Tester t) {
     // initialize the variables used
-    init();
+    this.init();
     WorldScene testScene = new WorldScene(60, 60);
     testScene.placeImageXY(
         new RectangleImage(60, 60, OutlineMode.SOLID, Color.WHITE), 30, 30);
@@ -280,7 +280,7 @@ class ExamplesBridgIt {
 
   // a test for assignNeighbors in the Cell class
   void testAssignNeighbors(Tester t) {
-    init();
+    this.init();
     t.checkExpect(this.whiteCell3.above, null);
     t.checkExpect(this.whiteCell3.below, null);
     t.checkExpect(this.whiteCell3.left, null);
@@ -294,7 +294,7 @@ class ExamplesBridgIt {
   
   // a test that the constructor errors out when given an even number
   void testBridgItConstruct(Tester t) {
-    init();
+    this.init();
     t.checkConstructorException(
         new IllegalArgumentException("Size of the board must be odd"), 
         "BridgItWorld", 2);
@@ -307,7 +307,7 @@ class ExamplesBridgIt {
   
   // a test for createBoard in the BridgItWorld class
   void testCreateBoard(Tester t) {
-    init();
+    this.init();
     for (ArrayList<Cell> y : this.testBoard) {
       for (Cell x : y) {
         x.assignNeighbors(this.testBoard);
@@ -321,7 +321,7 @@ class ExamplesBridgIt {
   
   // a test for linkCells in the BridgItWorld class
   void testLinkCells(Tester t) {
-    init();
+    this.init();
     // because linkCells is ran in the constructor, 
     // the class is checked by checking that some of the cells
     // have the correct neighbors
@@ -335,6 +335,7 @@ class ExamplesBridgIt {
 
   // a test for makeScene in the BridgItWorld class
   void testMakeScene(Tester t) {
+    this.init();
     WorldScene testScene = new WorldScene(0, 0);
     testScene.placeImageXY(
         new RectangleImage(60, 60, OutlineMode.SOLID, Color.WHITE), 30, 30);
@@ -375,12 +376,53 @@ class ExamplesBridgIt {
   
   // a test for onMouseClicked in the BridgItWorld class
   void testOnMouseClicked(Tester t) {
-    // to be checked in Part 2
+    this.init();
+    t.checkExpect(this.testW.board.get(1).get(0).color, Color.MAGENTA);
+    this.testW.onMouseClicked(new Posn(10, 30));
+    t.checkExpect(this.testW.board.get(1).get(0).color, Color.MAGENTA);
+    t.checkExpect(this.testW.board.get(1).get(1).color, Color.WHITE);
+    this.testW.onMouseClicked(new Posn(30, 30));
+    t.checkExpect(this.testW.board.get(1).get(1).color, Color.PINK);
+    this.testW.onMouseClicked(new Posn(30, 30));
+    t.checkExpect(this.testW.board.get(1).get(1).color, Color.PINK);
   }
   
   // a test for lastScene in the BridgItWorld class
   void testLastScene(Tester t) {
-    // to be checked in Part 2
+    this.init();
+    WorldScene testScene = new WorldScene(0, 0);
+    testScene.placeImageXY(
+        new RectangleImage(60, 60, OutlineMode.SOLID, Color.WHITE), 30, 30);
+    testScene.placeImageXY(
+        new RectangleImage(20, 20, OutlineMode.SOLID, Color.WHITE)
+        .movePinhole(-10, -10), 0, 0);
+    testScene.placeImageXY(
+        new RectangleImage(20, 20, OutlineMode.SOLID, Color.PINK)
+        .movePinhole(-10, -10), 20, 0);
+    testScene.placeImageXY(
+        new RectangleImage(20, 20, OutlineMode.SOLID, Color.WHITE)
+        .movePinhole(-10, -10), 40, 0);
+    testScene.placeImageXY(
+        new RectangleImage(20, 20, OutlineMode.SOLID, Color.MAGENTA)
+        .movePinhole(-10, -10), 0, 20);
+    testScene.placeImageXY(
+        new RectangleImage(20, 20, OutlineMode.SOLID, Color.WHITE)
+        .movePinhole(-10, -10), 20, 20);
+    testScene.placeImageXY(
+        new RectangleImage(20, 20, OutlineMode.SOLID, Color.MAGENTA)
+        .movePinhole(-10, -10), 40, 20);
+    testScene.placeImageXY(
+        new RectangleImage(20, 20, OutlineMode.SOLID, Color.WHITE)
+        .movePinhole(-10, -10), 0, 40);
+    testScene.placeImageXY(
+        new RectangleImage(20, 20, OutlineMode.SOLID, Color.PINK)
+        .movePinhole(-10, -10), 20, 40);
+    testScene.placeImageXY(
+        new RectangleImage(20, 20, OutlineMode.SOLID, Color.WHITE)
+        .movePinhole(-10, -10), 40, 40);
+    testScene.placeImageXY(
+        new TextImage("Player One Has Won!", 4.5, Color.BLACK), 30, 30);
+    t.checkExpect(this.testW.lastScene("Player One Has Won!"), testScene);
   }
   
 }
