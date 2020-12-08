@@ -82,6 +82,26 @@ class Cell {
     }
   }
   
+  // adds the neighbors of the cell if they have not already been seen and are the name color
+
+  void addNeighbors(ArrayList<Cell> workList, ArrayList<Cell> alreadySeen) {
+    if(this.left != null && !alreadySeen.contains(this.left) && this.left.color == this.color) {
+      workList.add(this.left);
+    }
+    if(this.right != null && !alreadySeen.contains(this.right) && this.right.color == this.color) {
+      workList.add(this.right);
+    }
+    if(this.above != null && !alreadySeen.contains(this.above) && this.above.color == this.color) {
+      workList.add(this.above);
+    }
+    if(this.below != null && !alreadySeen.contains(this.below) && this.below.color == this.color) {
+      workList.add(this.below);
+    }
+    
+    workList.remove(0);
+    alreadySeen.add(this);
+  }
+  
 }
 
 // represents the game
@@ -163,13 +183,40 @@ class BridgItWorld extends World {
   }
   
   //returns true when one of the players creates a complete bridge
-  boolean checkWin() {
-    // to be implemented in Part 2
-    return true;
+  void checkWin(boolean checkPinkWin) {
+    ArrayList<Cell> workList = new ArrayList<Cell>(0);
+    ArrayList<Cell> alreadySeen = new ArrayList<Cell>(0);
+    
+    if(checkPinkWin) {
+      for(int i = 1; i < this.boardSize-2; i+=2) {
+        workList.add(this.board.get(0).get(i));
+      }
+    } else {
+      for(int i = 1; i < this.boardSize-2; i+=2) {
+        workList.add(this.board.get(i).get(0));
+      }
+    }
+    
+    while(workList.size() > 0) {
+      ArrayList<Cell> tempWorkList = new ArrayList<Cell>(workList);
+      for(Cell c: tempWorkList) {
+        if(checkPinkWin) {
+          if(c.y == this.boardSize - 1) {
+            this.endOfWorld("Pink Wins!!!");
+          }
+        } else {
+          if(c.x == this.boardSize - 1) {
+            this.endOfWorld("Purple Wins!!!");
+          }
+        }
+        
+        c.addNeighbors(workList, alreadySeen);
+      }
+    } 
   }
 
   // handles mouse clicks
-  // EFFECT: Changes the colour of a cell
+  // EFFECT: Changes the color of a cell
   public void onMouseClicked(Posn p) {
     int xPos = p.x / Util.TILE_SIZE;
     int yPos = p.y / Util.TILE_SIZE;
@@ -180,11 +227,11 @@ class BridgItWorld extends World {
       if (this.pinkTurn && (clickedColor == Color.WHITE)) {
         clickedCell.color = Color.PINK;
         this.pinkTurn = false;
-        this.checkWin();
+        this.checkWin(true);
       } else if (!this.pinkTurn && (clickedColor == Color.WHITE)) {
         clickedCell.color = Color.MAGENTA;
         this.pinkTurn = true;
-        this.checkWin();
+        this.checkWin(false);
       }
     }
   }
@@ -371,7 +418,7 @@ class ExamplesBridgIt {
   
   // a test for checkWin in the BridgItWorld class
   void testCheckWin(Tester t) {
-    // to be tested in Part 2
+
   }
   
   // a test for onMouseClicked in the BridgItWorld class
