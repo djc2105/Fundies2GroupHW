@@ -43,15 +43,20 @@ class Cell {
    * methods: 
    *   this.drawCell(WorldScene) ... void
    *   this.assignNeighbors(ArrayList<ArrayList<Cell>>) ... void
+   *   this.addNeighbors(ArrayList<Cell>, ArrayList<Cell>) ... void
    * methods for fields: 
    *   this.above.drawCell(WorldScene) ... void
    *   this.above.assignNeighbors(ArrayList<ArrayList<Cell>>) ... void
+   *   this.above.addNeighbors(ArrayList<Cell>, ArrayList<Cell>) ... void
    *   this.below.drawCell(WorldScene) ... void
    *   this.below.assignNeighbors(ArrayList<ArrayList<Cell>>) ... void
+   *   this.below.addNeighbors(ArrayList<Cell>, ArrayList<Cell>) ... void
    *   this.left.drawCell(WorldScene) ... void
    *   this.left.assignNeighbors(ArrayList<ArrayList<Cell>>) ... void
+   *   this.left.addNeighbors(ArrayList<Cell>, ArrayList<Cell>) ... void
    *   this.right.drawCell(WorldScene) ... void
    *   this.right.assignNeighbors(ArrayList<ArrayList<Cell>>) ... void
+   *   this.right.addNeighbors(ArrayList<Cell>, ArrayList<Cell>) ... void
    */
   
   // draws a cell onto the given world scene
@@ -83,6 +88,8 @@ class Cell {
   }
   
   // adds the neighbors of the cell if they have not already been seen and are the name color
+  // EFFECT: Adds all the neighboring cell to the work list if they havn't been seen and 
+  // they are the right color and then adds this cell to already seen
 
   void addNeighbors(ArrayList<Cell> workList, ArrayList<Cell> alreadySeen) {
     if(this.left != null && !alreadySeen.contains(this.left) && this.left.color == this.color) {
@@ -98,8 +105,7 @@ class Cell {
       workList.add(this.below);
     }
     
-    workList.remove(0);
-    alreadySeen.add(this);
+    alreadySeen.add(workList.remove(0));
   }
   
 }
@@ -111,6 +117,10 @@ class BridgItWorld extends World {
   ArrayList<ArrayList<Cell>> board;
   int boardSize;
   Boolean pinkTurn;
+  // 0 for running, 1 for pink win, 2 for purple win
+  int running = 0;
+  ArrayList<Cell> workList = new ArrayList<Cell>(0);
+  ArrayList<Cell> alreadySeen = new ArrayList<Cell>(0);
   
   // constructor
   BridgItWorld(int boardSize) {
@@ -123,10 +133,14 @@ class BridgItWorld extends World {
     this.pinkTurn = true;
   }
   
+  
   /* fields: 
    *   this.board ... ArrayList<ArrayList<Cell>>
    *   this.boardSize ... int
    *   this.pinkTurn ... boolean
+   *   this.running ... boolean
+   *   this.workList ... ArrayList<Cell>
+   *   this.alreadySeen ... ArrayList<Cell>
    * methods: 
    *   this.createBoard() ... ArrayList<ArrayList<Cell>>
    *   this.linkCells() ... void
@@ -183,16 +197,17 @@ class BridgItWorld extends World {
   }
   
   //returns true when one of the players creates a complete bridge
+  // EFFECT: Changes the running variable if the game has been won and ends the world
   void checkWin(boolean checkPinkWin) {
-    ArrayList<Cell> workList = new ArrayList<Cell>(0);
-    ArrayList<Cell> alreadySeen = new ArrayList<Cell>(0);
+    workList = new ArrayList<Cell>(0);
+    alreadySeen = new ArrayList<Cell>(0);
     
     if(checkPinkWin) {
-      for(int i = 1; i < this.boardSize-2; i+=2) {
+      for(int i = 1; i < this.boardSize-1; i+=2) {
         workList.add(this.board.get(0).get(i));
       }
     } else {
-      for(int i = 1; i < this.boardSize-2; i+=2) {
+      for(int i = 1; i < this.boardSize-1; i+=2) {
         workList.add(this.board.get(i).get(0));
       }
     }
@@ -202,10 +217,12 @@ class BridgItWorld extends World {
       for(Cell c: tempWorkList) {
         if(checkPinkWin) {
           if(c.y == this.boardSize - 1) {
+            this.running = 1;
             this.endOfWorld("Pink Wins!!!");
           }
         } else {
           if(c.x == this.boardSize - 1) {
+            this.running = 2;
             this.endOfWorld("Purple Wins!!!");
           }
         }
@@ -260,6 +277,7 @@ class ExamplesBridgIt {
   Cell whiteCell3 = new Cell(1, 1, Color.WHITE);
   Cell whiteCell4 = new Cell(2, 0, Color.WHITE);
   Cell whiteCell5 = new Cell(2, 2, Color.WHITE);
+  Cell middleCell = new Cell(1, 1, Color.PINK);
   ArrayList<Cell> testRow0 = new ArrayList<Cell>(3);
   ArrayList<Cell> testRow1 = new ArrayList<Cell>(3);
   ArrayList<Cell> testRow2 = new ArrayList<Cell>(3);
@@ -277,6 +295,7 @@ class ExamplesBridgIt {
     whiteCell3 = new Cell(1, 1, Color.WHITE);
     whiteCell4 = new Cell(2, 0, Color.WHITE);
     whiteCell5 = new Cell(2, 2, Color.WHITE);
+    middleCell = new Cell(1, 1, Color.PINK);
     testRow0 = new ArrayList<Cell>(
         Arrays.asList(this.whiteCell1, this.pinkCell1, this.whiteCell4));
     testRow1 = new ArrayList<Cell>(
@@ -418,7 +437,24 @@ class ExamplesBridgIt {
   
   // a test for checkWin in the BridgItWorld class
   void testCheckWin(Tester t) {
-
+    init();
+    this.testW.checkWin(true);
+    t.checkExpect(this.testW.running, 0);
+    this.testW.checkWin(false);
+    t.checkExpect(this.testW.running, 0);
+    this.testW.onMouseClicked(new Posn(30, 30));
+    this.testW.checkWin(true);
+    t.checkExpect(this.testW.running, 1);
+    init();
+    this.testW.checkWin(true);
+    t.checkExpect(this.testW.running, 0);
+    this.testW.checkWin(false);
+    t.checkExpect(this.testW.running, 0);
+    this.testW.pinkTurn = false;
+    this.testW.onMouseClicked(new Posn(30, 30));
+    this.testW.checkWin(false);
+    t.checkExpect(this.testW.running, 2);
+    
   }
   
   // a test for onMouseClicked in the BridgItWorld class
@@ -471,5 +507,21 @@ class ExamplesBridgIt {
         new TextImage("Player One Has Won!", 4.5, Color.BLACK), 30, 30);
     t.checkExpect(this.testW.lastScene("Player One Has Won!"), testScene);
   }
-  
+ 
+  // a test for the addNeighbors in the Cell class
+  void testAddNeighbors(Tester t) {
+    init();
+    Cell testCell = this.testW.board.get(0).get(1);
+    t.checkExpect(this.testW.workList, new ArrayList<Cell>(0));
+    t.checkExpect(this.testW.alreadySeen, new ArrayList<Cell>(0));
+    this.testW.workList.add(testCell);
+    testCell.addNeighbors(this.testW.workList, this.testW.alreadySeen);
+    t.checkExpect(this.testW.workList, new ArrayList<Cell>(0));
+    t.checkExpect(this.testW.alreadySeen.size(), 1);
+    this.testW.board.get(1).get(1).color = Color.PINK;
+    this.testW.workList.add(testCell);
+    testCell.addNeighbors(this.testW.workList, this.testW.alreadySeen);
+    t.checkExpect(this.testW.workList.size(), 1);
+    t.checkExpect(this.testW.alreadySeen.size(), 2);
+  }
 }
